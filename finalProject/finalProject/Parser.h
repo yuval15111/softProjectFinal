@@ -17,7 +17,7 @@ to one of our possibles command:
 1->set, 2->hint, 3->validate, 4->restart, 5->exit
 @return
 values - array of chars that:
-values[0]=: 1->set, 2->hint, 3->validate, 4->restart, 5->exit
+values[0]=: 1->set, 2->hint, 3->validate, 4->restart, 5->exit, 6->mark_error
 If its set or hint command the values of the row, col and the number will be in the array
 */
 char* getCommand();

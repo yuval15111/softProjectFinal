@@ -5,8 +5,8 @@
 #include "Parser.h"
 
 int markError = 1;
-mode = 2; /*1 - solve mode and 0 - edit mode and 2 - init*/
-int n, m,N; /*n=num of rows of blocks, m=num of columns of blocks*/
+mode = 1; /*1 - solve mode and 0 - edit mode and 2 - init*/
+/*n, m,N - n=num of rows of blocks, m=num of columns of blocks*/
 
 /*
 solvedSudoku is the solution of the board from the last time the user checked the validaty of the board
@@ -47,9 +47,9 @@ Cell* copyCell(Cell* cell) {
 
 void printSudoku(Cell** sudoku) {
 	int i = 0, j = 0, k = 0;
-	for (k = 0; k < (N + n + 1); k++) {
-		if (k % n == 0) {
-			printf("%.*c\n", (4 * n*m) + n + 1, '-');
+	for (k = 0; k < height; k++) {
+		if (k % 3 == 0) {
+			printf("----------------------------------\n");
 		}
 		printf("|");
 		for (j = 0; j < width; j++) {
@@ -70,13 +70,8 @@ void printSudoku(Cell** sudoku) {
 		printf("\n");
 	}
 	printf("----------------------------------\n");
-	printf("%.*c\n", (4 * N) + n + 1, '-');
-	for (int j = 0; j < ; j++) {
-		for (k = 0; k < n; k++) {
-
-		}
-	}
 }
+
 
 bool isRowValidGame(Cell** sudoku, int row, int col, int num) {
 	int j = 0;
@@ -331,6 +326,9 @@ void doCommand(char* command) {
 	}
 	else if (command[0] == '3') {
 		validate(currentSudoku);
+	}
+	else if (command[0] == '6') {
+		markError = command[1] - '0';
 	}
 	else if (command[0] == '4') {
 		free(command);

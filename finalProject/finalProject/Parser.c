@@ -28,11 +28,9 @@ int initNumberOfHints() {
 
 char* getCommand() {
 	char command[1024];
-	int check;
-	int j = 1;
+	int j = 1, flag = 1, check, numOfMarkError;
 	char* newType;
 	char* values = (char*)malloc(sizeof(char) * 256);
-	int flag = 1;
 	idCommand = 0;
 	if (values == NULL) {
 		printf("Error: getCommand has failed\n");
@@ -41,12 +39,12 @@ char* getCommand() {
 	memset(values, '\0', 256);
 	while (flag)
 	{
+		j = 1;
 		printf("Enter your command:\n");
 		if (fgets(command, 1024, stdin) == NULL) {
 			exitGame();
 		}
 		newType = strtok(command, " \t\r\n");
-
 		if ((check = strcmp(newType, "solve")) == 0) {
 			idCommand = 1;
 			while ((newType = strtok(NULL, "\n")) != NULL) {
@@ -61,21 +59,48 @@ char* getCommand() {
 			}
 			flag = 0;
 		}
-		else if ((check = strcmp(newType, "edit")) == 0) {
-			idCommand = 2;
-			while ((newType = strtok(NULL, "\n")) != NULL) {
-				strcpy(values, newType);
+		else if ((check = strcmp(newType, "mark_errors")) == 0) {
+			if (mode == 1) { /*This command avaliable only in solve mode (1)*/
+				while (newType != NULL && j < 2) {
+					newType = strtok(NULL, " \t\r\n");
+					strcpy(values, newType);
+					j++;
+				}
+				numOfMarkError = atoi(values);
+				if (numOfMarkError == 0 || numOfMarkError == 1) {
+					values[0] = '6'; /* 6 represent mark_error command*/
+					values[1] = (numOfMarkError + '0');
+					flag = 0;
+				}
+				else {
+					printf("Error: the value should be 0 or 1\n");
+				}
 			}
-			flag = 0;
+			else {
+				printf("ERROR: invalid command\n");
+			}
+
 		}
 		else if ((check = strcmp(newType, "set")) == 0) {
-			while (newType != NULL && j < 4) {
-				newType = strtok(NULL, " \t\r\n");
-				values[j] = *newType;
-				j++;
+			if (mode == 1 || mode == 2) {
+				while (newType != NULL && j < 4) {
+					newType = strtok(NULL, " \t\r\n");
+					values[j] = *newType;
+					j++;
+				}
+				printf("set:x= %c, y=%c, z=%c\n", values[1], values[2], values[3]);
+				if (((values[1] - '0') < 0 || (values[1] - '0') > N) || ((values[2] - '0') < 0 || (values[2] - '0') > N)
+					|| ((values[3] - '0') < 0 || (values[3] - '0') > N)) {
+
+				}
+				else {
+					values[0] = '1';
+					flag = 0;
+				}
 			}
-			values[0] = '1';
-			flag = 0;
+			else {
+				printf("ERROR: invalid command\n");
+			}
 		}
 		else if ((check = strcmp(newType, "hint")) == 0) {
 			while (newType != NULL && j < 3) {

@@ -13,6 +13,7 @@ The game takes place in this module.
 #define blockWidth 3
 int mode; /*1 - solve command and 2 - edit and 0 - init*/
 int idCommand; /*1 - solve command and 2 - edit and 0 - else*/
+int n, m, N;
 
 /*
 The struct cell will represent every cell in the sudoku.

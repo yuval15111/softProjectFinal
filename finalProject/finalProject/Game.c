@@ -86,9 +86,9 @@ Cell* copyCell(Cell* cell) {
 
 void printSeparator() {
 	for (int i = 0; i < 4 * N + blockWidth + 1; i++) {
-		printf('-');
+		printf("-");
 	}
-	printf('\n');
+	printf("\n");
 }
 
 void printSudoku(Cell** sudoku) {
@@ -122,7 +122,7 @@ void printSudoku(Cell** sudoku) {
 					}
 				}
 			}
-			printf("|");
+			printf("|\n");
 		}
 		printSeparator();
 	}

@@ -94,21 +94,21 @@ void printSeparator() {
 void printSudoku(Cell** sudoku) {
 	int i, j, k, s;
 	printSeparator();
-	for (i=0; i <blockWidth; i++) {
-		for (j=0; j < blockHeight; j++) {
-			for (s=0; s<blockHeight;s++){
+	for (i=0; i <blockWidth; i++) { /*rows of blocks*/
+		for (j=0; j < blockHeight; j++) { /*rows in the block*/
+			for (s=0; s<blockHeight;s++){ /*cols of blocks*/
 				printf("|");
-				for (k=0; k < blockWidth; k++) {
+				for (k=0; k < blockWidth; k++) { /*cols in the block*/
 					printf(" ");
-					if (sudoku[i*blockHeight*N + j * N + s * blockHeight + k]->empty == 0) {
+					if (sudoku[i*blockHeight*N + j * N + s * blockWidth + k]->empty == 0) {
 						printf("   ");
 					}
 					else {
-						printf("%2d", sudoku[i*blockHeight*N + j * N + s * blockHeight + k]->value);
-						if (sudoku[i*blockHeight*N + j * N + s * blockHeight + k]->fixed == 1) {
+						printf("%2d", sudoku[i*blockHeight*N + j * N + s * blockWidth + k]->value);
+						if (sudoku[i*blockHeight*N + j * N + s * blockWidth + k]->fixed == 1) {
 							printf(".");
 						}
-						else if (sudoku[i*blockHeight*N + j * N + s * blockHeight + k]->erroneous == 1) {
+						else if (sudoku[i*blockHeight*N + j * N + s * blockWidth + k]->erroneous == 1) {
 							if (mode == 2 || markError == 1) {
 								printf("*");
 							}

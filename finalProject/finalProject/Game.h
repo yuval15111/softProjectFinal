@@ -9,11 +9,20 @@ The game takes place in this module.
 #ifndef GAME_H_
 #define GAME_H_
 #include<stdbool.h>
-#define blockHeight 3
-#define blockWidth 3
 int mode; /*1 - solve command and 2 - edit and 0 - init*/
 int idCommand; /*1 - solve command and 2 - edit and 0 - else*/
-int n, m, N;
+int blockWidth, blockHeight, N;
+
+typedef struct node {
+	int row, col, value, oldValue;
+	struct node* next;
+	struct node* prev;
+}node;
+
+typedef struct linkedList {
+	node* head;
+	node* current;
+}linkedList;
 
 /*
 The struct cell will represent every cell in the sudoku.
@@ -30,7 +39,7 @@ typedef struct cell_t {
 	int value;
 	int fixed; /*0 meaning not used*/
 	int empty;
-	int arr[(blockWidth*blockHeight) + 1];
+	int arr[10];
 	int erroneous;
 }Cell;
 

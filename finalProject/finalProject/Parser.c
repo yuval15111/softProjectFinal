@@ -28,9 +28,10 @@ int initNumberOfHints() {
 
 char* getCommand() {
 	char command[1024];
-	int j = 1, flag = 1, check, numOfMarkError;
+	int j = 1, flag = 1, check, numOfMarkError, i = 0, temp;
 	char* newType;
 	char* values = (char*)malloc(sizeof(char) * 256);
+	char* checkSet[256];
 	idCommand = 0;
 	if (values == NULL) {
 		printf("Error: getCommand has failed\n");
@@ -85,18 +86,25 @@ char* getCommand() {
 			if (mode == 1 || mode == 2) {
 				while (newType != NULL && j < 4) {
 					newType = strtok(NULL, " \t\r\n");
-					values[j] = *newType;
-					j++;
+					//strcpy(checkSet, newType);
+					for (i = 0; i < strlen(newType); i++) {
+						if ((isdigit((int)newType[i])) == 0) {
+							printf("Error: value not in range 0-%d\n", N);
+							return values;
+						}
+					}
+					temp = atoi(newType);
+					if ((temp < 0) || (temp > N)){
+						printf("Error: value not in range 0-%d\n", N);
+						return values;
+					}
+					else {
+						values[j] = temp + '0';
+						j++;
+					}
 				}
-				printf("set:x= %c, y=%c, z=%c\n", values[1], values[2], values[3]);
-				if (((values[1] - '0') < 0 || (values[1] - '0') > N) || ((values[2] - '0') < 0 || (values[2] - '0') > N)
-					|| ((values[3] - '0') < 0 || (values[3] - '0') > N)) {
-
-				}
-				else {
-					values[0] = '1';
-					flag = 0;
-				}
+				values[0] = '1';
+				flag = 0;
 			}
 			else {
 				printf("ERROR: invalid command\n");

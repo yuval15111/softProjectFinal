@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
 		seed = atoi(argv[1]);
 		srand(seed);
 		printf("Sudoku\n------\n");
-		puzzleGeneration(initNumberOfHints());
+		//puzzleGeneration(initNumberOfHints());
 		playGame();
 	}
 	return 0;

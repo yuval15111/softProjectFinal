@@ -7,8 +7,6 @@ In addition, this module generates the sudoku boards without any connection to t
 #define SOLVER_H_
 #include<stdbool.h>
 #include "Game.h"
-#define height 9
-#define width 9
 
 /*
 the range of our sudoku values.

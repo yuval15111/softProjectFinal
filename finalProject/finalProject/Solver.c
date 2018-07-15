@@ -7,15 +7,15 @@
 int row = 0, col = 0;
 
 Cell** generateSudoku() {
-	Cell** sudoku = (Cell**)malloc(sizeof(Cell*)*height*width);
+	Cell** sudoku = (Cell**)malloc(sizeof(Cell*)*N*N);
 	if (sudoku == NULL) { /*if the memory allocation didn't work*/
 		printf("Error: generateSudoku has failed\n");
 		exit(0);
 	}
 	int i, j;
-	for (i = 0; i < height; i++) {
-		for (j = 0; j < width; j++) {
-			sudoku[i* width + j] = createCell(0); /*creating an empty sudoku*/
+	for (i = 0; i < N; i++) {
+		for (j = 0; j < N; j++) {
+			sudoku[i* N + j] = createCell(0); /*creating an empty sudoku*/
 		}
 	}
 	return sudoku;
@@ -23,8 +23,8 @@ Cell** generateSudoku() {
 
 bool isRowValid(Cell** sudoku, int num) {
 	int j = 0;
-	for (j = 0; j < width; j++) {
-		if (sudoku[(row)*width + j]->value == num) {
+	for (j = 0; j < N; j++) {
+		if (sudoku[(row)*N + j]->value == num) {
 			return false;
 		}
 	}
@@ -33,8 +33,8 @@ bool isRowValid(Cell** sudoku, int num) {
 
 bool isColValid(Cell** sudoku, int num) {
 	int i;
-	for (i = 0; i < height; i++) {
-		if (sudoku[i*width + col]->value == num) {
+	for (i = 0; i < N; i++) {
+		if (sudoku[i*N + col]->value == num) {
 			return false;
 		}
 	}
@@ -45,7 +45,7 @@ bool isBlockValid(Cell** sudoku, int startRow, int startCol, int num) {
 	int i, j;
 	for (i = 0; i < blockHeight; i++) {
 		for (j = 0; j < blockWidth; j++) {
-			if (sudoku[(i + startRow)*width + j + startCol]->value == num) {
+			if (sudoku[(i + startRow)*N + j + startCol]->value == num) {
 				return false;
 			}
 		}
@@ -65,9 +65,9 @@ bool isValidNum(Cell** sudoku, int num) {
 }
 
 bool findNextEmptyCell(Cell** sudoku) {
-	for (row = 0; row < height; row++) {
-		for (col = 0; col < width; col++) {
-			if (sudoku[row*width + col]->empty == 0 && sudoku[row*width + col]->fixed == 0) {
+	for (row = 0; row < N; row++) {
+		for (col = 0; col < N; col++) {
+			if (sudoku[row*N + col]->empty == 0 && sudoku[row*N + col]->fixed == 0) {
 				return true;
 			}
 		}
@@ -78,7 +78,7 @@ bool findNextEmptyCell(Cell** sudoku) {
 void stepBack() {
 	col--;
 	if (col < 0) {
-		col = width - 1;
+		col = N - 1;
 		row--;
 	}
 }
@@ -89,18 +89,18 @@ bool detBacktrackRec(Cell** sudoku) {
 		return true;
 	}
 	for (num = 1; num <= blockHeight * blockWidth; num++) { /*checks for every possible number:*/
-		if (sudoku[(row)*width + col]->fixed == 0 && isValidNum(sudoku, num)) { /*if it's safe to put this num in this cell.*/
-			sudoku[row*width + col]->value = num;
-			sudoku[row*width + col]->empty = 1;
+		if (sudoku[(row)*N + col]->fixed == 0 && isValidNum(sudoku, num)) { /*if it's safe to put this num in this cell.*/
+			sudoku[row*N + col]->value = num;
+			sudoku[row*N + col]->empty = 1;
 			if (detBacktrackRec(sudoku)) { /*if there's a solution*/
 				return true;
 			}
-			sudoku[(row)*width + col]->value = 0; /*there's no solution with this num*/
-			sudoku[row*width + col]->empty = 0;
+			sudoku[(row)*N + col]->value = 0; /*there's no solution with this num*/
+			sudoku[row*N + col]->empty = 0;
 		}
 	}
 	stepBack();
-	while (sudoku[(row)*width + col]->fixed == 1) {/*as long as we got to a fixed cell-keep steping back*/
+	while (sudoku[(row)*N + col]->fixed == 1) {/*as long as we got to a fixed cell-keep steping back*/
 		if (row == 0 && col == 0) {
 			return false;
 		}
@@ -112,16 +112,16 @@ bool detBacktrackRec(Cell** sudoku) {
 Cell** determenisticBacktrack(Cell** currentSudoku) {
 	int i = 0, j;
 	bool flag = false;
-	Cell** copySudoku = (Cell**)malloc(height*width * sizeof(Cell)); /*if the memory allocation didn't work*/
+	Cell** copySudoku = (Cell**)malloc(N*N * sizeof(Cell)); /*if the memory allocation didn't work*/
 	if (copySudoku == NULL) {
 		printf("Error: determenisticBacktrack has failed\n");
 		exit(0);
 	}
-	for (i = 0; i < height; i++) {
-		for (j = 0; j < width; j++) {
-			copySudoku[i* width + j] = copyCell(currentSudoku[i* width + j]); /*copy the sudoku*/
-			if (currentSudoku[i*width + j]->empty != 0) {
-				copySudoku[i*width + j]->fixed = 1;
+	for (i = 0; i < N; i++) {
+		for (j = 0; j < N; j++) {
+			copySudoku[i* N + j] = copyCell(currentSudoku[i* N + j]); /*copy the sudoku*/
+			if (currentSudoku[i*N + j]->empty != 0) {
+				copySudoku[i*N + j]->fixed = 1;
 			}
 		}
 	}
@@ -138,10 +138,10 @@ Cell** determenisticBacktrack(Cell** currentSudoku) {
 void updateArrayForCell(Cell** boardGeneration) {
 	int i;
 	for (i = 1; i <= blockHeight * blockWidth; i++) {
-		boardGeneration[row*width + col]->arr[i] = 0; /*initialize the array field with 0*/
+		boardGeneration[row*N + col]->arr[i] = 0; /*initialize the array field with 0*/
 		if (isValidNum(boardGeneration, i)) {
-			boardGeneration[row*width + col]->arr[i] = 1;/*insert the valid numbers to the cell's array*/
-			boardGeneration[row*width + col]->arr[0] ++;
+			boardGeneration[row*N + col]->arr[i] = 1;/*insert the valid numbers to the cell's array*/
+			boardGeneration[row*N + col]->arr[0] ++;
 		}
 	}
 }
@@ -154,13 +154,13 @@ void removeNumberFromArray(Cell** board, int rand) {
 	int temp = rand + 1;
 	int i;
 	for (i = 1; i <= blockHeight * blockWidth; i++) {
-		if ((board[row*width + col]->arr[i]) == 1) { /*meaning we found a possible value*/
+		if ((board[row*N + col]->arr[i]) == 1) { /*meaning we found a possible value*/
 			temp--;
 			if (temp <= 0) { /*we found the valid value that has been chosen*/
-				board[row*width + col]->value = i;
-				board[row*width + col]->empty = 1;
-				board[row*width + col]->arr[i] = 0;
-				board[row*width + col]->arr[0]--;
+				board[row*N + col]->value = i;
+				board[row*N + col]->empty = 1;
+				board[row*N + col]->arr[i] = 0;
+				board[row*N + col]->arr[0]--;
 				break;
 			}
 		}
@@ -184,20 +184,20 @@ bool randomBacktrack(Cell** boardGeneration) {
 		return true;
 	}
 	updateArrayForCell(boardGeneration);
-	while (boardGeneration[row*width + col]->arr[0] == 0) { /*there are no valid values possible for the cell*/
-		boardGeneration[row*width + col]->value = 0;
-		boardGeneration[row*width + col]->empty = 0;
+	while (boardGeneration[row*N + col]->arr[0] == 0) { /*there are no valid values possible for the cell*/
+		boardGeneration[row*N + col]->value = 0;
+		boardGeneration[row*N + col]->empty = 0;
 		stepBack();
 	}
-	if (boardGeneration[row*width + col]->arr[0] == 1) { /*there is one valid value possible for this cell*/
-		boardGeneration[row*width + col]->value = findIndexToRemove(boardGeneration[row*width + col]->arr); /*indert it*/
-		boardGeneration[row*width + col]->empty = 1;
+	if (boardGeneration[row*N + col]->arr[0] == 1) { /*there is one valid value possible for this cell*/
+		boardGeneration[row*N + col]->value = findIndexToRemove(boardGeneration[row*N + col]->arr); /*indert it*/
+		boardGeneration[row*N + col]->empty = 1;
 		if (randomBacktrack(boardGeneration)) { /*if we succeded*/
 			return true;
 		}
 	}
-	if (boardGeneration[row*width + col]->arr[0] > 1) { /*if there are more than one possible value for this cell*/
-		removeNumberFromArray(boardGeneration, chooseRandomNumberToRemove(boardGeneration[row*width + col]->arr)); /*choose a value randomly and remove it from the array*/
+	if (boardGeneration[row*N + col]->arr[0] > 1) { /*if there are more than one possible value for this cell*/
+		removeNumberFromArray(boardGeneration, chooseRandomNumberToRemove(boardGeneration[row*N + col]->arr)); /*choose a value randomly and remove it from the array*/
 		if (randomBacktrack(boardGeneration)) { /*if we succeded*/
 			return true;
 		}
@@ -210,13 +210,13 @@ void getHintsBoard(int hints, Cell** solvedSudoku, Cell** sudokoWithHints) {
 	for (i = 0; i < hints; i++) {
 		col = rand() % (rangeOfNum);
 		row = rand() % (rangeOfNum);
-		while (sudokoWithHints[row*width + col]->fixed == 1) { /*if fixed choose again*/
+		while (sudokoWithHints[row*N + col]->fixed == 1) { /*if fixed choose again*/
 			col = rand() % (rangeOfNum);
 			row = rand() % (rangeOfNum);
 		}
-		sudokoWithHints[row*width + col]->fixed = 1;
-		sudokoWithHints[row*width + col]->empty = 1;
-		sudokoWithHints[row*width + col]->value = solvedSudoku[row*width + col]->value;
+		sudokoWithHints[row*N + col]->fixed = 1;
+		sudokoWithHints[row*N + col]->empty = 1;
+		sudokoWithHints[row*N + col]->value = solvedSudoku[row*N + col]->value;
 	}
 }
 

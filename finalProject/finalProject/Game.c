@@ -84,31 +84,48 @@ Cell* copyCell(Cell* cell) {
 
 }
 
-void printSudoku(Cell** sudoku) {
-	int i = 0, j = 0, k = 0;
-	for (k = 0; k < N; k++) {
-		if (k % 3 == 0) {
-			printf("----------------------------------\n");
-		}
-		printf("|");
-		for (j = 0; j < N; j++) {
-			if (sudoku[k* N + j]->fixed == 1) {
-				printf(" .");
-				printf("%d", sudoku[k* N + j]->value);
-			}
-			else if (sudoku[k* N + j]->empty == 0) {
-				printf("   ");
-			}
-			else {
-				printf("  %d", sudoku[k* N + j]->value);
-			}
-			if ((j + 1) % 3 == 0) {
-				printf(" |");
-			}
-		}
-		printf("\n");
+void printSeparator() {
+	for (int i = 0; i < 4 * N + blockWidth + 1; i++) {
+		printf('-');
 	}
-	printf("----------------------------------\n");
+	printf('\n');
+}
+
+void printSudoku(Cell** sudoku) {
+	int i, j, k, s;
+	printSeparator();
+	for (i=0; i <blockWidth; i++) {
+		for (j=0; j < blockHeight; j++) {
+			for (s=0; s<blockHeight;s++){
+				printf("|");
+				for (k=0; k < blockWidth; k++) {
+					printf(" ");
+					if (sudoku[i*blockHeight*N + j * N + s * blockHeight + k]->empty == 0) {
+						printf("   ");
+					}
+					else {
+						printf("%2d", sudoku[i*blockHeight*N + j * N + s * blockHeight + k]->value);
+						if (sudoku[i*blockHeight*N + j * N + s * blockHeight + k]->fixed == 1) {
+							printf(".");
+						}
+						else if (sudoku[i*blockHeight*N + j * N + s * blockHeight + k]->erroneous == 1) {
+							if (mode == 2 || markError == 1) {
+								printf("*");
+							}
+							else {
+								printf(" ");
+							}
+						}
+						else {
+							printf(" ");
+						}
+					}
+				}
+			}
+			printf("|");
+		}
+		printSeparator();
+	}
 }
 
 

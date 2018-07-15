@@ -70,7 +70,7 @@ Cell* createCell(int value) {
 	cell->erroneous = 0;
 	return cell;
 }
-
+//Test
 Cell* copyCell(Cell* cell) {
 	Cell* newCell = (Cell*)malloc(sizeof(Cell));
 	if (newCell == NULL) { /*the memory allocation didn't work*/

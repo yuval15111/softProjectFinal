@@ -10,6 +10,7 @@ and interpret this number.
 @return
 the number of hints - should be between 1 to 80
 */
+
 int initNumberOfHints();
 
 /**This function get the command that the user write in the command line and interpret

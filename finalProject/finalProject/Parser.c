@@ -217,6 +217,7 @@ char* getCommand() {
 		else printInvalid();
 	}
 	return values;
+
 }
 
 

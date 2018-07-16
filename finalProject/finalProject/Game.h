@@ -41,6 +41,7 @@ typedef struct cell_t {
 	int empty;
 	int arr[10];
 	int erroneous;
+	linkedList erroneousNeib;
 }Cell;
 
 /*

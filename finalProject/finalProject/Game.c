@@ -20,9 +20,9 @@ currentSudoku is the board that the user is playing on
 */
 Cell** currentSudoku;
 
-void initList() {
-	undo_redo.head = NULL;
-	undo_redo.current = NULL;
+void initList(linkedList list) {
+	list.head = NULL;
+	list.current = NULL;
 }
 
 void freeList(node* node) {
@@ -34,27 +34,21 @@ void freeList(node* node) {
 	}
 }
 
-void addNode(int row, int col, int val, int oldVal) {
+void addNode(linkedList* list, int row, int col, int val, int oldVal) {
 	node* newNode = (node*)malloc((sizeof(node)));
-	if (newNode == NULL) {
+	if (newNode == NULL) { /*the memory allocation failed*/
 		exitGame();
 	}
 	newNode->col = col;
 	newNode->row = row;
 	newNode->value = val;
 	newNode->oldValue = oldVal;
-	if (undo_redo.head == NULL) { /*first node in the list*/
-		undo_redo.head = newNode;
-		undo_redo.current = newNode;
-		newNode->prev = newNode;
-		newNode->next = newNode;
-	}
-	else {
-		undo_redo.head->prev->next = newNode;
-		newNode->prev = undo_redo.head->prev;
-		undo_redo.head->prev = newNode;
-		newNode->next = undo_redo.head;
-	}
+	newNode->next = list->head;
+	//temp = list->head;
+	list->head = newNode;
+	newNode->prev = list->head->prev;
+	//list->head = newNode;
+	list->current = newNode;
 }
 
 Cell* createCell(int value) {
@@ -68,9 +62,10 @@ Cell* createCell(int value) {
 	cell->empty = 0;
 	cell->arr[0] = 0;
 	cell->erroneous = 0;
+	initList(cell->erroneousNeib);
 	return cell;
 }
-//Test
+
 Cell* copyCell(Cell* cell) {
 	Cell* newCell = (Cell*)malloc(sizeof(Cell));
 	if (newCell == NULL) { /*the memory allocation didn't work*/
@@ -80,6 +75,8 @@ Cell* copyCell(Cell* cell) {
 	newCell->empty = cell->empty;
 	newCell->fixed = cell->fixed;
 	newCell->value = cell->value;
+	newCell->erroneous = cell->erroneous;
+	newCell->erroneousNeib = cell->erroneousNeib;
 	return newCell;
 
 }
@@ -196,26 +193,129 @@ bool isGameOver(Cell** sudoku) {
 	return true;
 }
 
+void checkErrorRow(int row, int col, int val) {
+	for (int j = 0; j < N; j++) { 
+		if (currentSudoku[(row)*N + j]->value == val) {
+			if (j != col) {
+				currentSudoku[row*N + col]->erroneous = 1;
+				addNode(&currentSudoku[row*N + col]->erroneousNeib, row, j, val, 0);
+				if (currentSudoku[row*N + j]->fixed == 0) {
+					currentSudoku[row*N + j]->erroneous = 1;
+					addNode(&currentSudoku[row*N + j]->erroneousNeib, row, col, val, 0);
+				}
+			}
+		}
+	}
+}
+
+void checkErrorCol(int row, int col, int val) {
+	for (int j = 0; j < N; j++) {
+		if (currentSudoku[j*N + col]->value == val) {
+			if (j != row) {
+				currentSudoku[row*N + col]->erroneous = 1;
+				addNode(&currentSudoku[row*N + col]->erroneousNeib, j, col, val, 0);
+				if (currentSudoku[j*N + col]->fixed == 0) {
+					currentSudoku[j*N + col]->erroneous = 1;
+					addNode(&currentSudoku[j*N + col]->erroneousNeib, row, col, val, 0);
+				}
+			}
+		}
+	}
+}
+
+void checkErrorBlock(int row, int col, int val) {
+	int startRow = row - row % blockWidth;
+	int startCol = col - col % blockHeight;
+	for (int i = 0; i < blockHeight; i++) {
+		for (int j = 0; j < blockWidth; j++) {
+			if (currentSudoku[(i + startRow)*N + j + startCol]->value == val) {
+				if (row != i + startRow || col != j + startCol) {
+					currentSudoku[row*N + col]->erroneous = 1;
+					addNode(&currentSudoku[row*N + col]->erroneousNeib, i + startRow, j + startCol, val, 0);
+					if (currentSudoku[(i+startRow)*N + j+startCol]->fixed == 0) {
+						currentSudoku[(i + startRow)*N + j + startCol]->erroneous = 1;
+						addNode(&currentSudoku[(i + startRow)*N + j + startCol]->erroneousNeib, row, col, val, 0);
+					}
+				}
+			}
+		}
+	}
+}
+
+void deleteNode(Cell* cell, linkedList* list ,node* origNode) {
+	if (origNode->next->row == origNode->row && origNode->next->col == origNode->col) {
+		free(origNode);
+		origNode = NULL;
+	}
+	else {
+		if ((list.head->row == origNode->row) && (list.head->col == origNode->col)) {
+			list.head = list.head->next;
+		}
+		origNode->prev->next = origNode->next;
+		origNode->next->prev = origNode->prev;
+		free(origNode);
+	}
+}
+
+void erroneousFixDel(int row, int col, int val) {
+	int tempRow, tempCol;
+	while (currentSudoku[row*N + col]->erroneousNeib.head != NULL) {
+		tempRow = currentSudoku[row*N + col]->erroneousNeib.head->row;
+		tempCol = currentSudoku[row*N + col]->erroneousNeib.head->col;
+		currentSudoku[tempRow*N + tempCol]->erroneousNeib.current = currentSudoku[tempRow*N + tempCol]->erroneousNeib.head;
+		while (currentSudoku[tempRow*N + tempCol]->erroneousNeib.current->row != row || /*Looking for the main node*/
+			currentSudoku[tempRow*N + tempCol]->erroneousNeib.current->col != col) {
+			currentSudoku[tempRow*N + tempCol]->erroneousNeib.current = currentSudoku[tempRow*N + tempCol]->erroneousNeib.current->next;
+		}
+		deleteNode(currentSudoku[tempRow*N + tempCol], &currentSudoku[tempRow*N + tempCol]->erroneousNeib, currentSudoku[tempRow*N + tempCol]->erroneousNeib.current);/*Delete the main node from the other lists */
+		deleteNode(currentSudoku[row*N + col], &currentSudoku[tempRow*N + tempCol]->erroneousNeib, currentSudoku[row*N + col]->erroneousNeib.head); /*In order to Delete the main node's list*/
+		if (currentSudoku[tempRow*N + tempCol]->erroneousNeib.head == NULL) {
+			currentSudoku[tempRow*N + tempCol]->erroneous = 0;
+		}
+	}
+}
+
+void erroneousFixAdd(int row, int col, int val) {
+	checkErrorRow(row, col, val);
+	checkErrorCol(row, col, val);
+	checkErrorBlock(row, col, val);
+}
+
 void set(Cell** currentSudoku, int row, int col, int val, char* oldCommand) {
 	bool rowValid, colValid, blockValid;
+	int oldVal;
 	char* command;
 	if (currentSudoku[row*N + col]->fixed == 1) {
 		printf("Error: cell is fixed\n");
 	}
 	else {
-		addNode(row, col, val, currentSudoku[row*N + col]->value);
+		oldVal = currentSudoku[row*N + col]->value;
+		addNode(&undo_redo, row, col, val, oldVal);
 		if (val == 0) { /*we initialize the cell, change it to an empty cell*/
 			currentSudoku[row*N + col]->value = 0;
 			currentSudoku[row*N + col]->empty = 0;
+			if (currentSudoku[row*N + col]->erroneous == 1) {
+				erroneousFixDel(row, col, oldVal);
+				currentSudoku[row*N + col]->erroneous = 0;
+			}
 			printSudoku(currentSudoku);
 		}
-		else {
+		else { /*should delete #########################################################################################*/
 			rowValid = isRowValidGame(currentSudoku, row, col, val);
 			colValid = isColValidGame(currentSudoku, row, col, val);
 			blockValid = isBlockValidGame(currentSudoku, row - row % blockWidth, col - col % blockHeight, row, col, val);
 			if (rowValid && colValid && blockValid) {
 				currentSudoku[row*N + col]->value = val;
-				currentSudoku[row*N + col]->empty = 1;
+				currentSudoku[row*N + col]->empty = 1; 
+			currentSudoku[row*N + col]->value = val;
+			currentSudoku[row*N + col]->empty = 1;
+			if (currentSudoku[row*N + col]->erroneous == 1) {
+				erroneousFixDel(row, col, oldVal);
+				erroneousFixAdd(row, col, val);
+			}
+			else {
+				erroneousFixAdd(row, col, val);
+			}
 				printSudoku(currentSudoku);
 				if (isGameOver(currentSudoku)) { /*if true-from this moment we approve only 'restart' and 'exit' commands*/
 					printf("Puzzle solved successfully\n");
@@ -306,7 +406,7 @@ void solve(char* path) {
 		}
 	}
 	mode = 1;
-	initList();
+	//initList(undo_redo);
 	currentSudoku = loadBoard;
 }
 
@@ -366,7 +466,7 @@ void edit(char* path) {
 	}
 	mode = 2;
 	markError = 1;
-	initList();
+	//initList(undo_redo);
 	currentSudoku = loadBoard;
 }
 
@@ -386,9 +486,7 @@ void doCommand(char* command) {
 	else if (command[0] == '3') {
 		validate(currentSudoku);
 	}
-	else if (command[0] == '6') {
-		markError = command[1] - '0';
-	}
+
 	else if (command[0] == '4') {
 		free(command);
 		restart();
@@ -396,6 +494,12 @@ void doCommand(char* command) {
 	else if (command[0] == '5') {
 		free(command);
 		exitGame();
+	}
+	else if (command[0] == '6') {
+		markError = command[1] - '0';
+	}
+	else if (command[0] == '7') {
+		printSudoku(currentSudoku);
 	}
 	free(command);
 }

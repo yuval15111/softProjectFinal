@@ -25,6 +25,9 @@ int initNumberOfHints() {
 	return convertHintsToInt;
 }
 
+void printInvalid() {
+	printf("ERROR: invalid command\n");
+}
 
 char* getCommand() {
 	char command[1024];
@@ -78,7 +81,7 @@ char* getCommand() {
 				}
 			}
 			else {
-				printf("ERROR: invalid command\n");
+				printInvalid();
 			}
 
 		}
@@ -107,8 +110,16 @@ char* getCommand() {
 				flag = 0;
 			}
 			else {
-				printf("ERROR: invalid command\n");
+				printInvalid();
 			}
+		}
+		else if ((check = strcmp(newType, "print_board")) == 0) {
+			if (mode == 1 || mode == 2) {
+				values[0] = '7';
+				flag = 0;
+			}
+			else printInvalid();
+			
 		}
 		else if ((check = strcmp(newType, "hint")) == 0) {
 			while (newType != NULL && j < 3) {
@@ -131,7 +142,7 @@ char* getCommand() {
 			values[0] = '5';
 			flag = 0;
 		}
-		else printf("ERROR: invalid command\n");
+		printInvalid();
 	}
 	return values;
 }

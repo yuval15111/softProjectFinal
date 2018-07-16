@@ -20,35 +20,42 @@ currentSudoku is the board that the user is playing on
 */
 Cell** currentSudoku;
 
-void initList(linkedList list) {
-	list.head = NULL;
-	list.current = NULL;
+void freelist(linkedList* l) {
+	node* temp;
+	while (l->head != NULL) {
+		temp = l->head;
+		l->head = l->head->next;
+		free(temp);
+	}
 }
 
-void freeList(node* node) {
-	if (node == NULL)
-		return;
+void initList(linkedList* l) {
+	l->head = (node*)malloc(sizeof(node));
+	l->head->prev = NULL;
+	l->head->next = NULL;
+	l->tail = l->head;
+	l->current = l->head;
+	l->len = 0;
+}
+
+void addNode(linkedList* list, int row, int col, int val, int oldVal) { /*##################################3*/
+	if (list->len == 0) {
+		list->head->col = col;
+		list->head->row = row;
+		list->head->value = val;
+		list->head->oldValue = oldVal;
+	}
 	else {
-		return freeList(node->next);
-		free(node);
+		list->tail->next = (node*)malloc(sizeof(node));
+		list->tail->next->col = col;
+		list->tail->next->row = row;
+		list->tail->next->value = val;
+		list->tail->next->oldValue = oldVal;
+		list->tail->next->next = NULL;
+		list->tail->next->prev = list->tail;
+		list->tail = list->tail->next;
 	}
-}
-
-void addNode(linkedList* list, int row, int col, int val, int oldVal) {
-	node* newNode = (node*)malloc((sizeof(node)));
-	if (newNode == NULL) { /*the memory allocation failed*/
-		exitGame();
-	}
-	newNode->col = col;
-	newNode->row = row;
-	newNode->value = val;
-	newNode->oldValue = oldVal;
-	newNode->next = list->head;
-	//temp = list->head;
-	list->head = newNode;
-	newNode->prev = list->head->prev;
-	//list->head = newNode;
-	list->current = newNode;
+	list->len++;
 }
 
 Cell* createCell(int value) {
@@ -62,7 +69,7 @@ Cell* createCell(int value) {
 	cell->empty = 0;
 	cell->arr[0] = 0;
 	cell->erroneous = 0;
-	initList(cell->erroneousNeib);
+	initList(&cell->erroneousNeib);
 	return cell;
 }
 
@@ -76,9 +83,8 @@ Cell* copyCell(Cell* cell) {
 	newCell->fixed = cell->fixed;
 	newCell->value = cell->value;
 	newCell->erroneous = cell->erroneous;
-	newCell->erroneousNeib = cell->erroneousNeib;
+	newCell->erroneousNeib = cell->erroneousNeib; /*################################copy one by one??*/
 	return newCell;
-
 }
 
 void printSeparator() {
@@ -124,7 +130,6 @@ void printSudoku(Cell** sudoku) {
 		printSeparator();
 	}
 }
-
 
 bool isRowValidGame(Cell** sudoku, int row, int col, int num) {
 	int j = 0;
@@ -243,16 +248,24 @@ void checkErrorBlock(int row, int col, int val) {
 }
 
 void deleteNode(Cell* cell, linkedList* list ,node* origNode) {
-	if (origNode->next->row == origNode->row && origNode->next->col == origNode->col) {
+	if (list->len == 1) {
 		free(origNode);
-		origNode = NULL;
+		initList(&cell->erroneousNeib);
 	}
 	else {
-		if ((list.head->row == origNode->row) && (list.head->col == origNode->col)) {
-			list.head = list.head->next;
+		if ((list->head->row == origNode->row) && (list->head->col == origNode->col)) { /*this is origNode*/
+			list->head = list->head->next;
+			origNode->next->prev = origNode->prev;
+			list->current = list->head;
 		}
-		origNode->prev->next = origNode->next;
-		origNode->next->prev = origNode->prev;
+		else if (list->tail->row == origNode->row && list->tail->col == origNode->col) {
+			list->tail = list->tail->prev;
+			list->tail->next = origNode->next;
+		}
+		else {
+			origNode->prev->next = origNode->next;
+			origNode->next->prev = origNode->prev;
+		}
 		free(origNode);
 	}
 }

@@ -10,7 +10,7 @@ The game takes place in this module.
 #define GAME_H_
 #include<stdbool.h>
 int mode; /*1 - solve command and 2 - edit and 0 - init*/
-int idCommand; /*1 - solve command and 2 - edit and 0 - else*/
+int idCommand; /*1 - solve command and 2 - edit and 0 - else 3-save*/
 int blockWidth, blockHeight, N;
 
 typedef struct node {
@@ -22,6 +22,8 @@ typedef struct node {
 typedef struct linkedList {
 	node* head;
 	node* current;
+	node* tail;
+	int len;
 }linkedList;
 
 /*

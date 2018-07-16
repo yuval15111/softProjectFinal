@@ -123,7 +123,7 @@ char* getCommand() {
 						}
 					}
 					temp = atoi(newType);
-					if ((temp < 0) || (temp >numOfEmptyCells)) {
+					if ((temp < 0) || (temp > numOfEmptyCells)) {
 						printf("Error: value not in range 0-%d\n", numOfEmptyCells);
 						return values;
 					}

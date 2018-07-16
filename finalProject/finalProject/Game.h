@@ -12,6 +12,7 @@ The game takes place in this module.
 int mode; /*1 - solve command and 2 - edit and 0 - init*/
 int idCommand; /*1 - solve command and 2 - edit and 0 - else 3-save*/
 int blockWidth, blockHeight, N;
+int numOfEmptyCells;
 
 typedef struct node {
 	int row, col, value, oldValue;

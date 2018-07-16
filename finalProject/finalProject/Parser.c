@@ -89,7 +89,6 @@ char* getCommand() {
 			if (mode == 1 || mode == 2) {
 				while (newType != NULL && j < 4) {
 					newType = strtok(NULL, " \t\r\n");
-					//strcpy(checkSet, newType);
 					for (i = 0; i < strlen(newType); i++) {
 						if ((isdigit((int)newType[i])) == 0) {
 							printf("Error: value not in range 0-%d\n", N);
@@ -107,6 +106,33 @@ char* getCommand() {
 					}
 				}
 				values[0] = '1';
+				flag = 0;
+			}
+			else {
+				printInvalid();
+			}
+		}
+		else if ((check = strcmp(newType, "generate")) == 0) {
+			if (mode == 2) {
+				while (newType != NULL && j < 4) {
+					newType = strtok(NULL, " \t\r\n");
+					for (i = 0; i < strlen(newType); i++) {
+						if ((isdigit((int)newType[i])) == 0) {
+							printf("Error: value not in range 0-%d\n", numOfEmptyCells);
+							return values;
+						}
+					}
+					temp = atoi(newType);
+					if ((temp < 0) || (temp >numOfEmptyCells)) {
+						printf("Error: value not in range 0-%d\n", numOfEmptyCells);
+						return values;
+					}
+					else {
+						values[j] = temp + '0';
+						j++;
+					}
+				}
+				values[0] = '12';
 				flag = 0;
 			}
 			else {
@@ -131,18 +157,64 @@ char* getCommand() {
 			flag = 0;
 		}
 		else if ((check = strcmp(newType, "validate")) == 0) {
-			values[0] = '3';
-			flag = 0;
+			if (mode == 1 || mode == 2) {
+				values[0] = '3';
+				flag = 0;
+			}
+			else printInvalid();
 		}
-		else if ((check = strcmp(newType, "restart")) == 0) {
-			values[0] = '4';
-			flag = 0;
+		else if ((check = strcmp(newType, "autofill")) == 0) {
+			if (mode == 1) {
+				values[0] = '8';
+				flag = 0;
+			}
+			else printInvalid();
+		}
+		else if ((check = strcmp(newType, "solve")) == 0) {
+			if (mode == 1 || mode == 2) {
+				idCommand = 2;
+				while ((newType = strtok(NULL, "\n")) != NULL) {
+					strcpy(values, newType);
+				}
+				flag = 0;
+			}
+			else printInvalid();
+		}
+		else if ((check = strcmp(newType, "undo")) == 0) {
+			if (mode == 1 || mode == 2) {
+				values[0] = '10';
+				flag = 0;
+			}
+			else printInvalid();
+		}
+		else if ((check = strcmp(newType, "redo")) == 0) {
+			if (mode == 1 || mode == 2) {
+				values[0] = '11';
+				flag = 0;
+			}
+			else printInvalid();
+		}
+		else if ((check = strcmp(newType, "num_solutions")) == 0) {
+			if (mode == 1 || mode==2) {
+				values[0] = '9';
+				flag = 0;
+			}
+			else printInvalid();
+		}
+		else if ((check = strcmp(newType, "reset")) == 0) {
+			if (mode == 1 || mode == 2) {
+				values[0] = '4';
+				flag = 0;
+			}
+			else printInvalid();
 		}
 		else if ((check = strcmp(newType, "exit")) == 0) {
-			values[0] = '5';
-			flag = 0;
+			if (mode == 1 || mode == 2) {
+				values[0] = '5';
+				flag = 0;
+			}
 		}
-		printInvalid();
+		else printInvalid();
 	}
 	return values;
 }

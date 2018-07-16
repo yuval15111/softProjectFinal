@@ -234,7 +234,7 @@ void checkErrorBlock(int row, int col, int val) {
 	for (int i = 0; i < blockHeight; i++) {
 		for (int j = 0; j < blockWidth; j++) {
 			if (currentSudoku[(i + startRow)*N + j + startCol]->value == val) {
-				if (row != i + startRow || col != j + startCol) {
+				if (row != i + startRow && col != j + startCol) {
 					currentSudoku[row*N + col]->erroneous = 1;
 					addNode(&currentSudoku[row*N + col]->erroneousNeib, i + startRow, j + startCol, val, 0);
 					if (currentSudoku[(i+startRow)*N + j+startCol]->fixed == 0) {
@@ -276,14 +276,18 @@ void erroneousFixDel(int row, int col, int val) {
 	while (currentSudoku[row*N + col]->erroneousNeib.len != 0) {
 		tempRow = currentSudoku[row*N + col]->erroneousNeib.head->row;
 		tempCol = currentSudoku[row*N + col]->erroneousNeib.head->col;
+		if (currentSudoku[tempRow*N + tempCol]->fixed == 1) {
+			deleteNode(currentSudoku[row*N + col], &currentSudoku[row*N + col]->erroneousNeib, currentSudoku[row*N + col]->erroneousNeib.head); /*In order to Delete the main node's list*/
+			continue;
+		}
 		currentSudoku[tempRow*N + tempCol]->erroneousNeib.current = currentSudoku[tempRow*N + tempCol]->erroneousNeib.head;
 		while (currentSudoku[tempRow*N + tempCol]->erroneousNeib.current->row != row || /*Looking for the main node*/
 			currentSudoku[tempRow*N + tempCol]->erroneousNeib.current->col != col) {
 			currentSudoku[tempRow*N + tempCol]->erroneousNeib.current = currentSudoku[tempRow*N + tempCol]->erroneousNeib.current->next;
 		}
 		deleteNode(currentSudoku[tempRow*N + tempCol], &currentSudoku[tempRow*N + tempCol]->erroneousNeib, currentSudoku[tempRow*N + tempCol]->erroneousNeib.current);/*Delete the main node from the other lists */
+		deleteNode(currentSudoku[row*N + col], &currentSudoku[row*N + col]->erroneousNeib, currentSudoku[row*N + col]->erroneousNeib.head); /*In order to Delete the main node's list*/
 		currentSudoku[tempRow*N + tempCol]->erroneousNeib.current = currentSudoku[tempRow*N + tempCol]->erroneousNeib.head;
-		deleteNode(currentSudoku[row*N + col], &currentSudoku[tempRow*N + tempCol]->erroneousNeib, currentSudoku[row*N + col]->erroneousNeib.head); /*In order to Delete the main node's list*/
 		if (currentSudoku[tempRow*N + tempCol]->erroneousNeib.len == 0) {
 			currentSudoku[tempRow*N + tempCol]->erroneous = 0;
 		}
@@ -305,7 +309,7 @@ void set(Cell** currentSudoku, int row, int col, int val, char* oldCommand) {
 	}
 	else {
 		oldVal = currentSudoku[row*N + col]->value;
-		//addNode(&undo_redo, row, col, val, oldVal);
+		addNode(&undo_redo, row, col, val, oldVal);
 		if (val == 0) { /*we initialize the cell, change it to an empty cell*/
 			currentSudoku[row*N + col]->value = 0;
 			currentSudoku[row*N + col]->empty = 0;
@@ -326,6 +330,7 @@ void set(Cell** currentSudoku, int row, int col, int val, char* oldCommand) {
 			currentSudoku[row*N + col]->empty = 1;
 			if (currentSudoku[row*N + col]->erroneous == 1) {
 				erroneousFixDel(row, col, oldVal);
+				currentSudoku[row*N + col]->erroneous = 0;
 				erroneousFixAdd(row, col, val);
 			}
 			else {

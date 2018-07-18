@@ -47,6 +47,17 @@ typedef struct cell_t {
 	linkedList erroneousNeib;
 }Cell;
 
+
+int freeList(node* headNode);
+
+void initList(linkedList* l);
+
+void addNode(linkedList* list, int row, int col, int val, int oldVal);
+
+void deleteNode(Cell* cell, linkedList* list, node* origNode);
+
+void deleteListFrom(node* nodeToBeDeleted);
+
 /*
 This function get value and create the cell with the value and the other fields will be default :
 cell->value = value;
@@ -63,7 +74,9 @@ copy of the cell
 */
 Cell* copyCell(Cell* cell);
 
-/*
+void printSeparator();
+
+/*####################### delete delete delete #########################################
 This function checks if the num parameter is valid in the row of the sudoku.
 (checks if num is already exist in the row of the sudoku)
 @return
@@ -72,7 +85,7 @@ False - otherwise
 */
 bool isRowValidGame(Cell** sudoku, int row, int col, int num);
 
-/*
+/*####################### delete delete delete #########################################
 This function checks if the num parameter is valid in the column of the sudoku.
 (checks if num is already exist in the column of the sudoku)
 @return
@@ -81,7 +94,7 @@ False - otherwise
 */
 bool isColValidGame(Cell** sudoku, int row, int col, int num);
 
-/*
+/*####################### delete delete delete #########################################
 This function checks if the num parameter is valid in the block of the sudoku.
 (checks if num is already exist in the block of the sudoku)
 @return
@@ -97,7 +110,7 @@ If there is no solution it prints a message to the user,
 otherwise, it replace the solved sudoku that save the solution of the current sudoku board
 and print a Appropriate message to the user.
 */
-void validate(Cell** currentSudoku);
+int validate(Cell** currentSudoku);
 
 /*
 This function get row and column.
@@ -114,6 +127,20 @@ Flase - the board isnt full
 */
 bool isGameOver(Cell** sudoku);
 
+void checkErrorRow(int row, int col, int val);
+
+void checkErrorCol(int row, int col, int val);
+
+void checkErrorBlock(int row, int col, int val);
+
+void erroneousFixAdd(int row, int col, int val);
+
+void erroneousFixDel(int row, int col, int val);
+
+int isBoardErrorneus(Cell** sudoku);
+
+int checkNumOfEmptyCells(Cell** sudoku);
+
 /*
 This function gets value, row and column and checks if it is valid to put the value in currentSudoku[row][column]
 if it is - cell->value = val and checks if the game is over.
@@ -122,6 +149,8 @@ otherwise - we contine as usual.
 If the val isn't valid we print to the user an appropriate message.
 */
 void set(Cell** currentSudoku, int row, int col, int val, char* oldCommand);
+
+void undo();
 
 /*
 This function print sudoku boards in a beatiful way
@@ -134,7 +163,7 @@ boardGeneration is the address that we got from puzzleGeneration function (solve
 */
 void getSolvedSudoku(Cell** boardGeneration);
 
-/*
+/*####################################### delete delete delete ####################################
 This function update the address of currentSudoku that saved the board with hints in game.c module
 sudokuWithHints is the address that we got from puzzleGeneration function (solver module).
 */
@@ -156,13 +185,18 @@ This function free all the sudoku boards, say goodbye to the user and exit
 */
 void exitGame();
 
-/*
+/*########################## maybe change to reset - otherwise delete #####################
 This function free all the sudoku boards and call again to puzzleGeneration with the
 function initNumberOfHints() (in order to get the number of hints that the user wants for his
 new game.
 then, calls playgame func.
 */
 void restart();
+
+void solve(char* path);
+
+void edit(char* path);
+
 
 /*
 The goal of the function is to receive commands and continue to play according to this commands

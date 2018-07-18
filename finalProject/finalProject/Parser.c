@@ -4,7 +4,7 @@
 #include<ctype.h>
 #include "Game.h"
 
-int initNumberOfHints() {
+int initNumberOfHints() {/*#######################################3delete###########################*/
 	char hints[20];
 	int flag = 1;
 	int convertHintsToInt = -1;
@@ -34,7 +34,6 @@ char* getCommand() {
 	int j = 1, flag = 1, check, numOfMarkError, i = 0, temp;
 	char* newType;
 	char* values = (char*)malloc(sizeof(char) * 256);
-	char* checkSet[256];
 	idCommand = 0;
 	if (values == NULL) {
 		printf("Error: getCommand has failed\n");
@@ -83,13 +82,12 @@ char* getCommand() {
 			else {
 				printInvalid();
 			}
-
 		}
 		else if ((check = strcmp(newType, "set")) == 0) {
 			if (mode == 1 || mode == 2) {
 				while (newType != NULL && j < 4) {
 					newType = strtok(NULL, " \t\r\n");
-					for (i = 0; i < strlen(newType); i++) {
+					for (i = 0; i < (int)strlen(newType); i++) {
 						if ((isdigit((int)newType[i])) == 0) {
 							printf("Error: value not in range 0-%d\n", N);
 							return values;
@@ -116,7 +114,7 @@ char* getCommand() {
 			if (mode == 2) {
 				while (newType != NULL && j < 4) {
 					newType = strtok(NULL, " \t\r\n");
-					for (i = 0; i < strlen(newType); i++) {
+					for (i = 0; i < (int)strlen(newType); i++) {
 						if ((isdigit((int)newType[i])) == 0) {
 							printf("Error: value not in range 0-%d\n", numOfEmptyCells);
 							return values;
@@ -132,7 +130,7 @@ char* getCommand() {
 						j++;
 					}
 				}
-				values[0] = '12';
+				values[0] = 'c';
 				flag = 0;
 			}
 			else {
@@ -170,9 +168,9 @@ char* getCommand() {
 			}
 			else printInvalid();
 		}
-		else if ((check = strcmp(newType, "solve")) == 0) {
+		else if ((check = strcmp(newType, "save")) == 0) {
 			if (mode == 1 || mode == 2) {
-				idCommand = 2;
+				idCommand = 3;
 				while ((newType = strtok(NULL, "\n")) != NULL) {
 					strcpy(values, newType);
 				}
@@ -182,14 +180,14 @@ char* getCommand() {
 		}
 		else if ((check = strcmp(newType, "undo")) == 0) {
 			if (mode == 1 || mode == 2) {
-				values[0] = '10';
+				values[0] = 'b';
 				flag = 0;
 			}
 			else printInvalid();
 		}
 		else if ((check = strcmp(newType, "redo")) == 0) {
 			if (mode == 1 || mode == 2) {
-				values[0] = '11';
+				values[0] = 'a';
 				flag = 0;
 			}
 			else printInvalid();

@@ -5,13 +5,15 @@ This module reads and interprets the user inputs.
 #ifndef PARSER_H_
 #define PARSER_H_
 
-/*This function get from the user the number of hints that he wants to start with in his sudoku game
+/*##########################################33delete delete delete ###################################
+This function get from the user the number of hints that he wants to start with in his sudoku game
 and interpret this number.
 @return
 the number of hints - should be between 1 to 80
 */
-
 int initNumberOfHints();
+
+void printInvalid();
 
 /**This function get the command that the user write in the command line and interpret
 to one of our possibles command:

@@ -89,12 +89,17 @@ void deleteNode(Cell* cell, linkedList* list, node* origNode) {
 }
 
 void deleteListFrom(node* nodeToBeDeleted) {
-	int numOfDeletedNodes;
-	nodeToBeDeleted->prev->next = NULL;
-	numOfDeletedNodes = freeList(&nodeToBeDeleted);
-	undo_redo.len = undo_redo.len - numOfDeletedNodes;
+	int numOfDeletedNodes = 0;
+	if (nodeToBeDeleted->prev == NULL) {
+		freeList(nodeToBeDeleted);
+		undo_redo.len = 0;
+	}
+	else {
+		nodeToBeDeleted->prev->next = NULL;
+		numOfDeletedNodes = freeList(nodeToBeDeleted);
+		undo_redo.len = undo_redo.len - numOfDeletedNodes;
+	}
 }
-
 Cell* createCell(int value) {
 	Cell* cell = (Cell*)malloc(sizeof(Cell));
 	if (cell == NULL) {
@@ -168,7 +173,7 @@ void printSudoku(Cell** sudoku) {
 	}
 }
 
-bool isRowValidGame(Cell** sudoku, int row, int col, int num) {
+bool isRowValidGame(Cell** sudoku, int row, int col, int num) {/*##################### delete ###########################*/
 	int j = 0;
 	for (j = 0; j < N; j++) {
 		if (sudoku[(row)*N + j]->value == num) {
@@ -180,7 +185,7 @@ bool isRowValidGame(Cell** sudoku, int row, int col, int num) {
 	return true;
 }
 
-bool isColValidGame(Cell** sudoku, int row, int col, int num) {
+bool isColValidGame(Cell** sudoku, int row, int col, int num) {/*##################### delete ###########################*/
 	int i;
 	for (i = 0; i < N; i++) {
 		if (sudoku[i*N + col]->value == num) {
@@ -192,7 +197,7 @@ bool isColValidGame(Cell** sudoku, int row, int col, int num) {
 	return true;
 }
 
-bool isBlockValidGame(Cell** sudoku, int startRow, int startCol, int row, int col, int num) {
+bool isBlockValidGame(Cell** sudoku, int startRow, int startCol, int row, int col, int num) {/*##################### delete ###########################*/
 	int i, j;
 	for (i = 0; i < blockHeight; i++) {
 		for (j = 0; j < blockWidth; j++) {
@@ -226,13 +231,14 @@ int validate(Cell** currentSudoku) { /*return 0 - erroneous board, 1 - solvable,
 			return 1;
 		}
 	}
+	return 0;
 }
 
 void hint(int row, int col) {
 	printf("Hint: set cell to %d\n", solvedSudoku[row*N + col]->value);
 }
 
-bool isGameOver(Cell** sudoku) {
+bool isGameOver(Cell** sudoku) {/*############################## delete ###########################*/
 	int i, j;
 	for (i = 0; i < N; i++) {
 		for (j = 0; j < N; j++) {
@@ -293,6 +299,12 @@ void checkErrorBlock(int row, int col, int val) {
 	}
 }
 
+void erroneousFixAdd(int row, int col, int val) {
+	checkErrorRow(row, col, val);
+	checkErrorCol(row, col, val);
+	checkErrorBlock(row, col, val);
+}
+
 void erroneousFixDel(int row, int col, int val) {
 	int tempRow, tempCol;
 	while (currentSudoku[row*N + col]->erroneousNeib.len != 0) {
@@ -316,14 +328,7 @@ void erroneousFixDel(int row, int col, int val) {
 	}
 }
 
-void erroneousFixAdd(int row, int col, int val) {
-	checkErrorRow(row, col, val);
-	checkErrorCol(row, col, val);
-	checkErrorBlock(row, col, val);
-}
-
-int isBoardErrorneus(Cell** sudoku)
-{
+int isBoardErrorneus(Cell** sudoku){
 	int i, j;
 	for (i = 0; i < N; i++) {
 		for (j = 0; j < N; j++) {
@@ -336,8 +341,7 @@ int isBoardErrorneus(Cell** sudoku)
 	return 0;
 }
 
-int checkNumOfEmptyCells(Cell** sudoku)
-{
+int checkNumOfEmptyCells(Cell** sudoku){
 	int count = 0, i, j;
 	for (i = 0; i < N; i++) {
 		for (j = 0; j < N; j++) {
@@ -385,7 +389,7 @@ void set(Cell** currentSudoku, int row, int col, int val, char* oldCommand) {
 			addNode(&undo_redo, row, col, val, oldVal);
 		}
 		else if (undoBit) { /*we did undo to the first cell in undo_redo list*/
-			deleteListFrom(&undo_redo.current); /*deleteListFrom(X) - delete X and the nodes after until the end*/
+			deleteListFrom(undo_redo.current); /*deleteListFrom(X) - delete X and the nodes after until the end*/
 			initList(&undo_redo);
 			addNode(&undo_redo, row, col, val, oldVal);
 			undoBit = 0;
@@ -395,7 +399,8 @@ void set(Cell** currentSudoku, int row, int col, int val, char* oldCommand) {
 				addNode(&undo_redo, row, col, val, oldVal);
 			}
 			else {
-				deleteListFrom(&undo_redo.current->next);
+				undo_redo.tail = undo_redo.current;
+				deleteListFrom(undo_redo.current->next);
 				addNode(&undo_redo, row, col, val, oldVal);
 			}
 		}
@@ -415,7 +420,7 @@ void set(Cell** currentSudoku, int row, int col, int val, char* oldCommand) {
 
 void undo() {
 	int col, row, beforeUndoVal, afterUndoVal;
-	if (undo_redo.len == 0) {
+	if (undo_redo.len == 0 || undoBit == 1) {
 		printf("Error: no moves to undo\n");
 		return;
 	}
@@ -424,15 +429,19 @@ void undo() {
 	beforeUndoVal = undo_redo.current->value;
 	afterUndoVal = undo_redo.current->oldValue;
 	if (beforeUndoVal != 0 && afterUndoVal != 0) {
-		printf("Undo %d,%d: from %d to %d\n", col, row, beforeUndoVal, afterUndoVal);
+		printf("Undo %d,%d: from %d to %d\n", (col+1), (row+1), beforeUndoVal, afterUndoVal);
 	}
 	else if (beforeUndoVal == 0 && afterUndoVal == 0) {
-		printf("Undo %d,%d: from _ to _\n", col, row);
+		printf("Undo %d,%d: from _ to _\n", (col+1), (row+1));
 	}
 	else if (beforeUndoVal == 0) {
-		printf("Undo %d,%d: from _ to %d\n", col, row, afterUndoVal);
+		printf("Undo %d,%d: from _ to %d\n", (col+1), (row+1), afterUndoVal);
+		currentSudoku[row*N + col]->empty = 1;
 	}
-	else printf("Undo %d,%d: from %d to _\n", col, row, beforeUndoVal);
+	else {
+		printf("Undo %d,%d: from %d to _\n", (col + 1), (row + 1), beforeUndoVal);
+		currentSudoku[row*N + col]->empty = 0;
+	}
 	if (undo_redo.current->prev != NULL) {
 		undo_redo.current = undo_redo.current->prev;
 	}
@@ -442,7 +451,9 @@ void undo() {
 		currentSudoku[row*N + col]->erroneous = 0;
 	}
 	currentSudoku[row*N + col]->value = afterUndoVal;
-	erroneousFixAdd(row, col, afterUndoVal);
+	if (afterUndoVal != 0) {
+		erroneousFixAdd(row, col, afterUndoVal);
+	}
 }
 
 void exitGame() {
@@ -452,7 +463,7 @@ void exitGame() {
 	exit(0);
 }
 
-void restart() {
+void restart() {/*########################## maybe change to reset - otherwise delete #####################*/
 	freeSudoku(currentSudoku);
 	freeSudoku(solvedSudoku);
 	puzzleGeneration(initNumberOfHints());
@@ -467,7 +478,7 @@ void solve(char* path) {
 	int value, col, row;
 	Cell** loadBoard;
 	if (currentSudoku != NULL) {
-		freeList(&undo_redo.head);
+		freeList(undo_redo.head);
 		freeSudoku(currentSudoku);
 		freeSudoku(solvedSudoku);/*maybe delete????????????????????????????*/
 	}
@@ -523,7 +534,7 @@ void edit(char* path) {
 	int value, col, row;
 	Cell** loadBoard;
 	if (currentSudoku != NULL) {
-		freeList(&undo_redo.head);
+		freeList(undo_redo.head);
 		freeSudoku(currentSudoku);
 		freeSudoku(solvedSudoku);/*maybe delete????????????????????????????*/
 	}
@@ -587,6 +598,9 @@ void doCommand(char* command) {
 	else if (idCommand == 2) {
 		edit(command);
 	}
+	else if (idCommand == 3) {/*save*/
+
+	}
 	else if (command[0] == '1') {
 		set(currentSudoku, (command[2] - '0') - 1, (command[1] - '0') - 1, command[3] - '0', command);
 	}
@@ -597,7 +611,7 @@ void doCommand(char* command) {
 		validate(currentSudoku);
 	}
 
-	else if (command[0] == '4') {
+	else if (command[0] == '4') {/*should be reset!!!!!!!!!!!!!!!!!!!!!!!!*/
 		free(command);
 		restart();
 	}
@@ -608,8 +622,23 @@ void doCommand(char* command) {
 	else if (command[0] == '6') {
 		markError = command[1] - '0';
 	}
-	else if (command[0] == '7') {
+	else if (command[0] == '7') {/*print_board*/
 		printSudoku(currentSudoku);
+	}
+	else if (command[0] == '8') {/*autofill*/
+
+	}
+	else if (command[0] == '9') {/*num_solutions*/
+
+	}
+	else if (command[0] == 'a') {/*redo*/
+
+	}
+	else if (command[0] == 'b') {/*undo*/
+		undo();
+	}
+	else if (command[0] == 'c') { /*generate*/
+
 	}
 	free(command);
 }
@@ -618,7 +647,7 @@ void getSolvedSudoku(Cell** boardGeneration) {
 	solvedSudoku = boardGeneration;
 }
 
-void getSudokuWithHints(Cell** sudokuWithHints) {
+void getSudokuWithHints(Cell** sudokuWithHints) {/*########################## delete ###########################*/
 	currentSudoku = sudokuWithHints;
 }
 
@@ -628,7 +657,7 @@ void freeSudoku(Cell** sudoku) {
 		for (i = 0; i < N; i++) {
 			for (j = 0; j < N; j++) {
 				if (sudoku[i*N + j]->fixed == 0) {
-					freeList(&sudoku[i*N + j]->erroneousNeib.head);
+					freeList(sudoku[i*N + j]->erroneousNeib.head);
 				}
 				free(sudoku[i*N + j]);
 			}

@@ -21,7 +21,7 @@ Cell** generateSudoku() {
 	return sudoku;
 }
 
-bool isRowValid(Cell** sudoku, int num) {
+bool isRowValid(Cell** sudoku, int num) {/*#####################################delete ##############################*/
 	int j = 0;
 	for (j = 0; j < N; j++) {
 		if (sudoku[(row)*N + j]->value == num) {
@@ -31,7 +31,7 @@ bool isRowValid(Cell** sudoku, int num) {
 	return true;
 }
 
-bool isColValid(Cell** sudoku, int num) {
+bool isColValid(Cell** sudoku, int num) {/*#####################################delete ##############################*/
 	int i;
 	for (i = 0; i < N; i++) {
 		if (sudoku[i*N + col]->value == num) {
@@ -41,7 +41,7 @@ bool isColValid(Cell** sudoku, int num) {
 	return true;
 }
 
-bool isBlockValid(Cell** sudoku, int startRow, int startCol, int num) {
+bool isBlockValid(Cell** sudoku, int startRow, int startCol, int num) {/*##################delete ######################*/
 	int i, j;
 	for (i = 0; i < blockHeight; i++) {
 		for (j = 0; j < blockWidth; j++) {
@@ -53,7 +53,7 @@ bool isBlockValid(Cell** sudoku, int startRow, int startCol, int num) {
 	return true;
 }
 
-bool isValidNum(Cell** sudoku, int num) {
+bool isValidNum(Cell** sudoku, int num) {/*#####################################delete ##############################*/
 	bool rowValid, colValid, blockValid;
 	rowValid = isRowValid(sudoku, num);
 	colValid = isColValid(sudoku, num);

@@ -384,7 +384,7 @@ void set(Cell** currentSudoku, int row, int col, int val, char* oldCommand) {
 		if (undo_redo.len == 0) {
 			addNode(&undo_redo, row, col, val, oldVal);
 		}
-		else if (undoBit) { /*We did undo to the first cell in undo_redo list*/
+		else if (undoBit) { /*we did undo to the first cell in undo_redo list*/
 			deleteListFrom(&undo_redo.current); /*deleteListFrom(X) - delete X and the nodes after until the end*/
 			initList(&undo_redo);
 			addNode(&undo_redo, row, col, val, oldVal);

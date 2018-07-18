@@ -14,12 +14,31 @@ int idCommand; /*1 - solve command and 2 - edit and 0 - else 3-save*/
 int blockWidth, blockHeight, N;
 int numOfEmptyCells;
 
+/*
+The struct node will respresent every 'cell' in the  doubly linked list below
+it's field:
+row- the row of the node's cell
+col- the coulmn of the node's cell
+value- the value of the node's cell
+oldVal- the previous value of the node's cell
+next- the next node in the linked list
+prev- the previous node in the linked list
+*/
 typedef struct node {
 	int row, col, value, oldValue;
 	struct node* next;
 	struct node* prev;
 }node;
 
+/*
+The struct linkedeList will represent a doubly linked list for the undo/redo list.
+We will also use this struct as a field for each cell in the sudoku.
+it's fields:
+head- a pointer to the first node in the linked list
+current- a pointer to the current node (for undo/redo list)
+tail- a pointer to the last node in the linked list
+len- the length of the linked list
+*/
 typedef struct linkedList {
 	node* head;
 	node* current;
@@ -47,9 +66,20 @@ typedef struct cell_t {
 	linkedList erroneousNeib;
 }Cell;
 
-
+/*
+This function gets a node in the doubly linked list and free all the memory allocations starts by this node
+(free 'headNode' and all the nodes after it in the doubly linked list)
+@return
+the number of cells the function did free to
+*/
 int freeList(node* headNode);
 
+/*
+This function initiallize the doubly linked list: 
+allocates space in memory for the 'head' field
+
+
+*/
 void initList(linkedList* l);
 
 void addNode(linkedList* list, int row, int col, int val, int oldVal);

@@ -240,7 +240,7 @@ void hint(int row, int col) {
 		return;
 	}
 	if (currentSudoku[row*N + col]->fixed == 1) {
-		print("Error: cell is fixed\n");
+		printf("Error: cell is fixed\n");
 		return;
 	}
 	if (currentSudoku[row*N + col]->empty == 1) {

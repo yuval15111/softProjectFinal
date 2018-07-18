@@ -116,13 +116,13 @@ char* getCommand() {
 					newType = strtok(NULL, " \t\r\n");
 					for (i = 0; i < (int)strlen(newType); i++) {
 						if ((isdigit((int)newType[i])) == 0) {
-							printf("Error: value not in range 0-%d\n", numOfEmptyCells);
+							printf("Error: value not in range 1-%d\n", numOfEmptyCells);
 							return values;
 						}
 					}
 					temp = atoi(newType);
 					if ((temp < 0) || (temp > numOfEmptyCells)) {
-						printf("Error: value not in range 0-%d\n", numOfEmptyCells);
+						printf("Error: value not in range 1-%d\n", numOfEmptyCells);
 						return values;
 					}
 					else {
@@ -145,14 +145,32 @@ char* getCommand() {
 			else printInvalid();
 			
 		}
-		else if ((check = strcmp(newType, "hint")) == 0) {
-			while (newType != NULL && j < 3) {
-				newType = strtok(NULL, " \t\r\n");
-				values[j] = *newType;
-				j++;
+		else if ((check = strcmp(newType, "set")) == 0) {
+			if (mode == 1) {
+				while (newType != NULL && j < 4) {
+					newType = strtok(NULL, " \t\r\n");
+					for (i = 0; i < (int)strlen(newType); i++) {
+						if ((isdigit((int)newType[i])) == 0) {
+							printf("Error: value not in range 1-%d\n", N);
+							return values;
+						}
+					}
+					temp = atoi(newType);
+					if ((temp < 1) || (temp > N)) {
+						printf("Error: value not in range 1-%d\n", N);
+						return values;
+					}
+					else {
+						values[j] = temp + '0';
+						j++;
+					}
+				}
+				values[0] = '2';
+				flag = 0;
 			}
-			values[0] = '2';
-			flag = 0;
+			else {
+				printInvalid();
+			}
 		}
 		else if ((check = strcmp(newType, "validate")) == 0) {
 			if (mode == 1 || mode == 2) {

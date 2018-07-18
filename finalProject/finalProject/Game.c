@@ -235,7 +235,19 @@ int validate(Cell** currentSudoku) { /*return 0 - erroneous board, 1 - solvable,
 }
 
 void hint(int row, int col) {
-	printf("Hint: set cell to %d\n", solvedSudoku[row*N + col]->value);
+	if (isBoardErrorneus) {
+		printf("Error: board contains erroneous values\n");
+		return;
+	}
+	if (currentSudoku[row*N + col]->fixed == 1) {
+		print("Error: cell is fixed\n");
+		return;
+	}
+	if (currentSudoku[row*N + col]->empty == 1) {
+		printf("Error: cell already contains a value\n");
+		return;
+	}
+	/*run ILP algo and check if there is a solution the the current board back to point h in PDF ########################*/
 }
 
 bool isGameOver(Cell** sudoku) {/*############################## delete ###########################*/
@@ -456,6 +468,54 @@ void undo() {
 	}
 }
 
+void redo() {
+	int col, row, beforeRedoVal, afterRedoVal;
+	if (undo_redo.len == 0 || (undo_redo.current->next == NULL && undoBit == 0)) {
+		printf("Error: no moves to redo\n");
+		return;
+	}
+	if (undo_redo.current->next == NULL && undoBit == 1) {
+		col = undo_redo.current->col;
+		row = undo_redo.current->row;
+		beforeRedoVal = undo_redo.current->oldValue;
+		afterRedoVal = undo_redo.current->value;
+	}
+	else {
+		col = undo_redo.current->next->col;
+		row = undo_redo.current->next->row;
+		beforeRedoVal = undo_redo.current->next->oldValue;
+		afterRedoVal = undo_redo.current->next->value;
+	}
+	if (beforeRedoVal != 0 && afterRedoVal != 0) {
+		printf("Redo %d,%d: from %d to %d\n", (col + 1), (row + 1), beforeRedoVal, afterRedoVal);
+	}
+	else if (beforeRedoVal == 0 && afterRedoVal == 0) {
+		printf("Redo %d,%d: from _ to _\n", (col + 1), (row + 1));
+	}
+	else if (beforeRedoVal == 0) {
+		printf("Redo %d,%d: from _ to %d\n", (col + 1), (row + 1), afterRedoVal);
+		currentSudoku[row*N + col]->empty = 1;
+	}
+	else {
+		printf("Redo %d,%d: from %d to _\n", (col + 1), (row + 1), beforeRedoVal);
+		currentSudoku[row*N + col]->empty = 0;
+	}
+	if (undo_redo.current->next == NULL && undoBit == 1) {
+		undoBit = 0;
+	}
+	else if (undo_redo.current->next != NULL) {
+		undo_redo.current = undo_redo.current->next;
+	}
+	if (currentSudoku[row*N + col]->erroneous == 1) {
+		erroneousFixDel(row, col, beforeRedoVal);
+		currentSudoku[row*N + col]->erroneous = 0;
+	}
+	currentSudoku[row*N + col]->value = afterRedoVal;
+	if (afterRedoVal != 0) {
+		erroneousFixAdd(row, col, afterRedoVal);
+	}
+}
+
 void exitGame() {
 	freeSudoku(currentSudoku);
 	freeSudoku(solvedSudoku);
@@ -463,11 +523,14 @@ void exitGame() {
 	exit(0);
 }
 
-void restart() {/*########################## maybe change to reset - otherwise delete #####################*/
-	freeSudoku(currentSudoku);
-	freeSudoku(solvedSudoku);
-	puzzleGeneration(initNumberOfHints());
-	playGame();
+void reset() {
+	int i = 0;
+	for (i = 0; i < undo_redo.len; i++) {
+		undo();
+	}
+	freeList(undo_redo.head);
+	initList(&undo_redo);
+	printf("Board reset\n");
 }
 
 void solve(char* path) {
@@ -613,7 +676,7 @@ void doCommand(char* command) {
 
 	else if (command[0] == '4') {/*should be reset!!!!!!!!!!!!!!!!!!!!!!!!*/
 		free(command);
-		restart();
+		reset();
 	}
 	else if (command[0] == '5') {
 		free(command);
@@ -632,7 +695,7 @@ void doCommand(char* command) {
 
 	}
 	else if (command[0] == 'a') {/*redo*/
-
+		redo();
 	}
 	else if (command[0] == 'b') {/*undo*/
 		undo();

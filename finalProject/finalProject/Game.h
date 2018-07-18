@@ -191,7 +191,7 @@ function initNumberOfHints() (in order to get the number of hints that the user 
 new game.
 then, calls playgame func.
 */
-void restart();
+void reset();
 
 void solve(char* path);
 

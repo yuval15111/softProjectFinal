@@ -5,7 +5,7 @@
 #include "Parser.h"
 
 int markError = 1, undoBit, redoBit;/*The bit is to the case that we did undo\redo to the first cell in the undo_redo list*/
-mode = 2; /*1 - solve mode and 0 - edit mode and 2 - init*/
+mode = 2; /*1 - solve mode and 2 - edit mode and 0 - init*/
 		  /*n, m,N - n=num of rows of blocks, m=num of columns of blocks*/
 linkedList undo_redo;
 
@@ -225,7 +225,7 @@ int validate(Cell** currentSudoku) { /*return 0 - erroneous board, 1 - solvable,
 			return 2;
 		}
 		else {
-			freeSudoku(solvedSudoku);
+			freeSudoku(solvedSudoku); /*################## check###################*/
 			solvedSudoku = newSolvedSudoku;
 			printf("Validation passed: board is solvable\n");
 			return 1;
@@ -533,6 +533,79 @@ void reset() {
 	printf("Board reset\n");
 }
 
+void save(Cell** sudoku, char* path) { /*we should check if it is possible to save an erroneus board in solve mode,
+									   i think its possilbe. If its possible, we need to check after loading the board in solve
+									   and edit if there is and erroneus cells*/
+	if (mode == 2) {
+		if (isBoardErrorneus(sudoku) == 1) {
+			printf("Error: board contains errorneus values\n");
+			return;
+		}
+		if (validate(currentSudoku) == 2) { /*shouldnt use validate because of the printf in validate!!!!!!!!!!!!!!*/
+			printf("Error: board validation failed\n");
+			return;
+		}
+	}
+	FILE* fd = fopen(path, "w");
+	if (fd == NULL) {
+		printf("Error: File cannot be created or modified\n");
+	}
+	fprintf(fd, "%c%c%c", (blockWidth+'0'),' ', (blockHeight+'0'));
+	for (int k = 0; k < (blockWidth*blockHeight); k++) {
+				fprintf(fd,"\n");
+		for (int j = 0; j < (blockWidth*blockHeight); j++) {
+			if (mode == 2) {
+				fprintf(fd, "%c%c%c", (currentSudoku[k*(blockWidth*blockHeight) + j]->value+'0'),'.',' ');
+			}
+			else {
+				if (currentSudoku[k*(blockWidth*blockHeight) + j]->fixed == 1) {
+					fprintf(fd, "%c%c%c", (currentSudoku[k*(blockWidth*blockHeight) + j]->value + '0'), '.', ' ');
+				}
+				else fprintf(fd, "%c%c", (currentSudoku[k*(blockWidth*blockHeight) + j]->value + '0'), ' ');
+			}
+		}
+	}
+	fclose(fd);
+	printf("Saved to: %s\n", path);
+}
+
+void autoFill(Cell** sudoku) {
+	if (isBoardErrorneus(sudoku) == 1) {
+		printf("Error: board contains erroneous values\n");
+		return;
+	} // row col val - set
+	int* arr = (int*)malloc(blockWidth*blockHeight * sizeof(int));
+	int numCounter = 0; /*for counting the number of the possible fills*/
+	int counter = 0; /*for counting the number of cell to autofill*/
+	int startRow;
+	int startCol;
+	for (int k = 0; k < (blockWidth*blockHeight); k++) {
+		for (int j = 0; j < (blockWidth*blockHeight); j++) {
+			if (currentSudoku[k*(blockWidth*blockHeight) + j]->empty == 0) {
+				int startRow = k - k % blockHeight;
+				int startCol = j - j % blockWidth;
+				for (int z = 0; z < (blockHeight*blockWidth); z++) {
+					if (isRowValidGame(sudoku, k, j, z) && isColValidGame(sudoku, k, j, z) && isBlockValidGame(sudoku,startRow,startCol, k, j, z)) {
+						numCounter++;
+					}
+				}
+				if (numCounter == 1) {
+					for (int h = 0; h < (blockHeight*blockWidth); h++) {
+						if (isRowValidGame(sudoku, k, j, h) && isColValidGame(sudoku, k, j, h) && isBlockValidGame(sudoku, startRow, startCol, k, j, h)) {
+							arr[counter] = k; arr[counter + 1] = j; arr[counter + 2] = h;
+							counter++;
+						}
+					}
+				}
+			}
+			numCounter = 0;
+		}
+	}
+	for (int g = 0; g < (counter / 3); g++) { /*should correct the undo for this!*/
+		set(sudoku, arr[g], arr[g + 1], arr[g + 2], NULL);
+	}
+}
+
 void solve(char* path) {
 	char* fd;
 	char buff[256] = "\0";
@@ -553,8 +626,8 @@ void solve(char* path) {
 		printf("Error: File doesn't exsist or cannot be opened\n");
 		return;
 	}
-	blockHeight = row;
-	blockWidth = col;
+	blockHeight = row; /*n*/
+	blockWidth = col; /*m*/
 	N = blockWidth * blockHeight;
 	loadBoard = (Cell**)malloc(sizeof(Cell*)*(col*col*row*row));
 	for (int k = 0; k < (row*col); k++) {
@@ -662,7 +735,7 @@ void doCommand(char* command) {
 		edit(command);
 	}
 	else if (idCommand == 3) {/*save*/
-
+		save(currentSudoku, command);
 	}
 	else if (command[0] == '1') {
 		set(currentSudoku, (command[2] - '0') - 1, (command[1] - '0') - 1, command[3] - '0', command);
@@ -689,7 +762,7 @@ void doCommand(char* command) {
 		printSudoku(currentSudoku);
 	}
 	else if (command[0] == '8') {/*autofill*/
-
+		autoFill(currentSudoku);
 	}
 	else if (command[0] == '9') {/*num_solutions*/
 

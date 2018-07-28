@@ -581,15 +581,18 @@ void autoFill(Cell** sudoku) {
 	int startCol;
 	for (int k = 0; k < (blockWidth*blockHeight); k++) {
 		for (int j = 0; j < (blockWidth*blockHeight); j++) {
-			if (currentSudoku[k*(blockWidth*blockHeight) + j]->empty == 0) {
+			if (currentSudoku[k*(blockWidth*blockHeight) + j]->empty == 0) {/*check only the empty cells*/
 				int startRow = k - k % blockHeight;
 				int startCol = j - j % blockWidth;
-				for (int z = 0; z < (blockHeight*blockWidth); z++) {
+				for (int z = 0; z < (blockHeight*blockWidth); z++) {/*for every empty cell in the sudoku we check which
+																	number between 1-N is valid for him. if there is more of
+																	1 option, numCounter wil be > 1*/
 					if (isRowValidGame(sudoku, k, j, z) && isColValidGame(sudoku, k, j, z) && isBlockValidGame(sudoku,startRow,startCol, k, j, z)) {
 						numCounter++;
 					}
 				}
-				if (numCounter == 1) {
+				if (numCounter == 1) {/*there is only 1 option between 1-N
+									  we search for the option and add to the list*/
 					for (int h = 0; h < (blockHeight*blockWidth); h++) {
 						if (isRowValidGame(sudoku, k, j, h) && isColValidGame(sudoku, k, j, h) && isBlockValidGame(sudoku, startRow, startCol, k, j, h)) {
 							arr[counter] = k; arr[counter + 1] = j; arr[counter + 2] = h;

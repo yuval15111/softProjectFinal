@@ -8,6 +8,11 @@ In addition, this module generates the sudoku boards without any connection to t
 #include<stdbool.h>
 #include "Game.h"
 
+typedef struct stackNode {/* definition of the stack's nodes */
+	int row, col, lastVal;
+	struct stackNode* next;
+}stackNode;
+
 /*
 the range of our sudoku values.
 */
@@ -163,6 +168,9 @@ checks if sudokuWithHints[row][col].fixed==0 and if so it inserts the solvedSudo
 this function changes the sudokuWithHints in place, and in the end it will be the game board.
 */
 void getHintsBoard(int hints, Cell** solvedSudoku, Cell** sudokoWithHints);
+
+void findNextEmptyCell2(Cell** sudoku, int row, int col, int* c);
+int exBackTrac(Cell** sudoku);
 
 #endif /*SOLVER_H_*/
 

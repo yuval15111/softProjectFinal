@@ -609,6 +609,22 @@ void autoFill(Cell** sudoku) {
 	}
 }
 
+int num_solutions(Cell** sudoku) {
+	Cell** temp = (Cell**)malloc(sizeof(Cell*)*(N*N));
+	for (int i = 0; i < N; i++) {
+		for (int j = 0; j < N; j++) {
+			temp[i*N + j] = createCell(currentSudoku[i*N + j]->value);
+			if (temp[i*N + j]->value != 0) {
+				temp[i*N + j]->fixed = 1;
+				temp[i*N + j]->empty = 1;
+			}
+		}
+	}
+	printSudoku(temp);
+	int num = exBackTrac(temp);
+	printf("solutions: %d", num);
+}
+
 void solve(char* path) {
 	char* fd;
 	char buff[256] = "\0";
@@ -663,6 +679,7 @@ void solve(char* path) {
 	mode = 1;
 	initList(&undo_redo);
 	currentSudoku = loadBoard;
+
 }
 
 void edit(char* path) {
@@ -768,7 +785,7 @@ void doCommand(char* command) {
 		autoFill(currentSudoku);
 	}
 	else if (command[0] == '9') {/*num_solutions*/
-
+		num_solutions(currentSudoku);
 	}
 	else if (command[0] == 'a') {/*redo*/
 		redo();

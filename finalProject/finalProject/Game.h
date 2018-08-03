@@ -235,6 +235,7 @@ This function is actually the place that the game occure.
 */
 void playGame();
 
+int num_solutions(Cell ** sudoku);
 
 
 #endif /*GAME_H_*/

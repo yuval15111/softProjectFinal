@@ -231,5 +231,154 @@ void puzzleGeneration(int hints) {
 }
 
 
+stackNode* newNode(int row, int col) {
+	stackNode* Node = (stackNode*) malloc(sizeof(stackNode));
+	Node->row = row;
+	Node->col = col;
+	Node->lastVal = 0;
+	Node->next = NULL;
+	return Node;
+}
+
+void push(stackNode** root, int row, int col, int val) {
+	stackNode* Node = newNode(row, col);
+	Node->lastVal = val;
+	Node->next = *root;
+	*root = Node;
+}
+
+int isEmpty(stackNode* root) {
+	if (root == NULL) {
+		return 0;
+	}
+	else return 1;
+}
+
+stackNode* pop(stackNode** root) {
+	stackNode* temp;
+	stackNode* popped;
+	if (!isEmpty(*root)) {
+		popped = newNode(-1, -1);
+		return popped;
+	}
+	temp = *root;
+	*root = (*root)->next;
+	popped = newNode(0, 0);
+	popped->col = temp->col;
+	popped->row = temp->row;
+	popped->lastVal = temp->lastVal;
+	free(temp);
+	return popped;
+}
+
+stackNode* peek(node* root) {
+	stackNode* popped;
+	if (!isEmpty(root)) {
+		popped = newNode(-1, -1);
+		return popped;
+	}
+	return root;
+}
+
+void findNextEmptyCell2(Cell** sudoku, int row, int col, int* index) {
+	index[0] = -1;
+	index[1] = -1;
+	for (int i=0; i < N; i++) {
+		for (int j=0; j < N; j++) {
+			if (sudoku[i*N + j]->empty == 0 && sudoku[i*N + j]->fixed == 0) {
+				if ((i == row && j > col) || (i > row)) {
+					index[0] = i;
+					index[1] = j;
+					return;
+				}
+			}
+		}
+	}
+	return;
+}
+
+int findNextVal(Cell** sudoku, int row, int col, int curVal) {
+	int tempVal = (curVal+1);
+	for (tempVal; tempVal <= N; tempVal++) {
+		if ((isRowValidGame(sudoku, row, col, tempVal)) && (isColValidGame(sudoku, row, col, tempVal)) && (isBlockValidGame(sudoku, row - (row%blockHeight), col - (col%blockWidth),row ,col, tempVal))) {
+			return tempVal;
+		}
+	}
+	return -1;
+}
+
+int exBackTrac(Cell** sudoku) {
+	int solutionCounter = 0, flag = 1, curRow = 0, curCol = 0, nextVal = 0;
+	int index[2] = { -1,-1 };
+	stackNode* root = NULL, *curNode;
+	push(&root, -1, -1, -1);
+
+	findNextEmptyCell2(sudoku, curRow, curCol, index);
+	curCol = index[1];
+	curRow = index[0];
+	while (flag) {
+		if (index[0] == -1) {  // find solution for the sudoku
+			solutionCounter++;
+			curNode = pop(&root);
+			if (root->col == -1) {
+				flag = 0;
+				break;
+			}
+			sudoku[curNode->row*N + curNode->col]->value = 0;
+			sudoku[curNode->row*N + curNode->col]->empty = 0;
+			index[0] = curNode->row;
+			index[1] = curNode->col;
+			curNode = peek(root);
+			curCol = curNode->col;
+			curRow = curNode->row;
+		}
+		if (curCol == 0 && curRow == 8) {
+			printf("y");
+			printSudoku(sudoku);
+		}
+		nextVal = findNextVal(sudoku, curRow, curCol, sudoku[curRow*N + curCol]->value);
+		if (nextVal == -1) {
+			curNode = peek(root);
+			if (curNode->row == curRow && curNode->col == curCol) {
+				curNode = pop(&root);
+				if (root->col == -1) {
+					flag = 0;
+					break;
+				}
+				sudoku[curNode->row*N + curNode->col]->value = 0;
+				sudoku[curNode->row*N + curNode->col]->empty = 0;
+				index[0] = curNode->row;
+				index[1] = curNode->col;
+				curNode = peek(root);
+			}
+			curCol = curNode->col;
+			curRow = curNode->row;
+			continue;
+		}
+		else {
+			sudoku[curRow*N + curCol]->value = nextVal;
+			sudoku[curRow*N + curCol]->empty = 1;
+			if (root->col == curCol && root->row == curRow) {
+				root->lastVal = nextVal;
+			}
+			else {
+				push(&root, curRow, curCol, nextVal);
+			}
+		//	curRow = index[0];
+			//curCol = index[1];
+		}
+		findNextEmptyCell2(sudoku, curRow, curCol,index);
+		curRow = index[0];
+		curCol = index[1];
+		if (root->col == -1 && root->row == -1) {
+			flag = 0;
+			break;
+		}
+	}
+	return solutionCounter;
+}
+
+
+
 
 

@@ -254,36 +254,36 @@ int isEmpty(stackNode* root) {
 	else return 1;
 }
 
-stackNode* pop(stackNode** root) {
+int* pop(stackNode** root) {
 	stackNode* temp;
-	stackNode* popped;
+	int popped[3] = { -1,-1,-1 };
 	if (!isEmpty(*root)) {
-		popped = newNode(-1, -1);
 		return popped;
 	}
 	temp = *root;
 	*root = (*root)->next;
-	popped = newNode(0, 0);
-	popped->col = temp->col;
-	popped->row = temp->row;
-	popped->lastVal = temp->lastVal;
+	popped[1] = temp->col;
+	popped[0]= temp->row;
+	popped[2] = temp->lastVal;
 	free(temp);
 	return popped;
 }
 
-stackNode* peek(node* root) {
-	stackNode* popped;
+int* peek(stackNode* root) {
+	int popped[3] = { -1,-1,-1 };
 	if (!isEmpty(root)) {
-		popped = newNode(-1, -1);
 		return popped;
 	}
-	return root;
+	popped[0] = root->row;
+	popped[1] = root->col;
+	popped[2] = root->lastVal;
+	return popped;
 }
 
 void findNextEmptyCell2(Cell** sudoku, int row, int col, int* index) {
 	index[0] = -1;
 	index[1] = -1;
-	for (int i=0; i < N; i++) {
+	for (int i=row; i < N; i++) {
 		for (int j=0; j < N; j++) {
 			if (sudoku[i*N + j]->empty == 0 && sudoku[i*N + j]->fixed == 0) {
 				if ((i == row && j > col) || (i > row)) {
@@ -309,8 +309,9 @@ int findNextVal(Cell** sudoku, int row, int col, int curVal) {
 
 int exBackTrac(Cell** sudoku) {
 	int solutionCounter = 0, flag = 1, curRow = 0, curCol = 0, nextVal = 0;
-	int index[2] = { -1,-1 };
-	stackNode* root = NULL, *curNode;
+	int index[2] = { -1,-1 }, *popped;
+	int check = 0;
+	stackNode* root = NULL;
 	push(&root, -1, -1, -1);
 
 	findNextEmptyCell2(sudoku, curRow, curCol, index);
@@ -319,40 +320,46 @@ int exBackTrac(Cell** sudoku) {
 	while (flag) {
 		if (index[0] == -1) {  // find solution for the sudoku
 			solutionCounter++;
-			curNode = pop(&root);
+			popped = pop(&root);
 			if (root->col == -1) {
-				flag = 0;
+				flag = 0; 
 				break;
 			}
-			sudoku[curNode->row*N + curNode->col]->value = 0;
-			sudoku[curNode->row*N + curNode->col]->empty = 0;
-			index[0] = curNode->row;
-			index[1] = curNode->col;
-			curNode = peek(root);
-			curCol = curNode->col;
-			curRow = curNode->row;
+			sudoku[popped[0]*N + popped[1]]->value = 0;
+			sudoku[popped[0]*N + popped[1]]->empty = 0;
+			index[0] = popped[0];
+			index[1] = popped[1];
+			popped = peek(root);
+			curCol = popped[1];
+			curRow = popped[0];
 		}
-		if (curCol == 0 && curRow == 8) {
-			printf("y");
+		/*if (curCol == 8 && curRow == 7) {
+			check = 1;
+			if(sudoku[2]->value == 7 ){
+				printf("a");
+				printSudoku(sudoku);
+			}
+		}
+		if (check == 1 && curRow == 1 && curCol == 2) {
 			printSudoku(sudoku);
-		}
+		}*/
 		nextVal = findNextVal(sudoku, curRow, curCol, sudoku[curRow*N + curCol]->value);
 		if (nextVal == -1) {
-			curNode = peek(root);
-			if (curNode->row == curRow && curNode->col == curCol) {
-				curNode = pop(&root);
+			popped = peek(root);
+			if (popped[0] == curRow && popped[1] == curCol) {
+				popped = pop(&root);
 				if (root->col == -1) {
 					flag = 0;
 					break;
 				}
-				sudoku[curNode->row*N + curNode->col]->value = 0;
-				sudoku[curNode->row*N + curNode->col]->empty = 0;
-				index[0] = curNode->row;
-				index[1] = curNode->col;
-				curNode = peek(root);
+				sudoku[popped[0]*N + popped[1]]->value = 0;
+				sudoku[popped[0]*N + popped[1]]->empty = 0;
+				index[0] = popped[0];
+				index[1] = popped[1];
+				popped = peek(root);
 			}
-			curCol = curNode->col;
-			curRow = curNode->row;
+			curCol = popped[1];
+			curRow = popped[0];
 			continue;
 		}
 		else {
@@ -364,8 +371,6 @@ int exBackTrac(Cell** sudoku) {
 			else {
 				push(&root, curRow, curCol, nextVal);
 			}
-		//	curRow = index[0];
-			//curCol = index[1];
 		}
 		findNextEmptyCell2(sudoku, curRow, curCol,index);
 		curRow = index[0];

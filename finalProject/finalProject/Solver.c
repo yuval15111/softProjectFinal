@@ -313,7 +313,6 @@ int exBackTrac(Cell** sudoku) {
 	int check = 0;
 	stackNode* root = NULL;
 	push(&root, -1, -1, -1);
-
 	findNextEmptyCell2(sudoku, curRow, curCol, index);
 	curCol = index[1];
 	curRow = index[0];
@@ -333,16 +332,6 @@ int exBackTrac(Cell** sudoku) {
 			curCol = popped[1];
 			curRow = popped[0];
 		}
-		/*if (curCol == 8 && curRow == 7) {
-			check = 1;
-			if(sudoku[2]->value == 7 ){
-				printf("a");
-				printSudoku(sudoku);
-			}
-		}
-		if (check == 1 && curRow == 1 && curCol == 2) {
-			printSudoku(sudoku);
-		}*/
 
 		// find the next value (value+1) for the curr cell. 
 		nextVal = findNextVal(sudoku, curRow, curCol, sudoku[curRow*N + curCol]->value);
@@ -357,8 +346,8 @@ int exBackTrac(Cell** sudoku) {
 				// initialize the cell to be 0
 				sudoku[popped[0]*N + popped[1]]->value = 0;
 				sudoku[popped[0]*N + popped[1]]->empty = 0;
-				index[0] = popped[0];
-				index[1] = popped[1];
+				//index[0] = popped[0];
+				//index[1] = popped[1];
 				popped = peek(root);
 			}
 			// we stepBack to the prev cell and we will find for this cell the next valid number (if there is)

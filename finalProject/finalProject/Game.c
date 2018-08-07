@@ -573,7 +573,7 @@ void autoFill(Cell** sudoku) {
 	if (isBoardErrorneus(sudoku) == 1) {
 		printf("Error: board contains erroneous values\n");
 		return;
-	} // row col val - set
+	}
 	int* arr = (int*)malloc(blockWidth*blockHeight * sizeof(int));
 	int numCounter = 0; /*for counting the number of the possible fills*/
 	int counter = 0; /*for counting the number of cell to autofill*/
@@ -595,7 +595,7 @@ void autoFill(Cell** sudoku) {
 									  we search for the option and add to the list*/
 					for (int h = 0; h < (blockHeight*blockWidth); h++) {
 						if (isRowValidGame(sudoku, k, j, h) && isColValidGame(sudoku, k, j, h) && isBlockValidGame(sudoku, startRow, startCol, k, j, h)) {
-							arr[counter] = k; arr[counter + 1] = j; arr[counter + 2] = h;
+							arr[counter] = k; arr[counter + 1] = j; arr[counter + 2] = h; /*add to the list. k=row, j=col, h= val*/
 							counter++;
 						}
 					}
@@ -604,12 +604,23 @@ void autoFill(Cell** sudoku) {
 			numCounter = 0;
 		}
 	}
-	for (int g = 0; g < (counter / 3); g++) { /*should correct the undo for this!*/
+	for (int g = 0; g < (counter / 3); g++) { /*should correct the undo/redo for this!
+											  option - insted of NULL we will send global counter that will be the number of
+											  autofill that happend - in order to determine while doint undo if the set that
+											  happend is connected to the autofill (if there will be 2 autofill one after other
+											  so after 1 undo we will get only one backward in the undo list and not 2)
+											  and we need a new field in the cell node that determine: 0=no autofill and >0
+											  to which autofill its connected. when doing undo and it was a autofill node
+											  we will minus one the global counter (to be consistent)*/
 		set(sudoku, arr[g], arr[g + 1], arr[g + 2], NULL);
 	}
 }
 
-int num_solutions(Cell** sudoku) {
+void num_solutions(Cell** sudoku) {
+	if (isBoardErrorneus(sudoku) == 1) {
+		printf("Error: board contains erroneous values\n");
+		return;
+	}
 	Cell** temp = (Cell**)malloc(sizeof(Cell*)*(N*N));
 	for (int i = 0; i < N; i++) {
 		for (int j = 0; j < N; j++) {
@@ -622,7 +633,12 @@ int num_solutions(Cell** sudoku) {
 	}
 	printSudoku(temp);
 	int num = exBackTrac(temp);
-	printf("solutions: %d", num);
+	printf("Number of solutions: %d\n", num);
+	if (num == 1) {
+		printf("This is a good board!\n");
+	}
+	else printf("The puzzle has more than 1 solution, try to edit it further\n");
+	return;
 }
 
 void solve(char* path) {

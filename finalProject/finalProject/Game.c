@@ -46,6 +46,7 @@ void addNode(linkedList* list, int row, int col, int val, int oldVal) {
 		list->head->col = col;
 		list->head->row = row;
 		list->head->value = val;
+		list->head->autoCells = 0;
 		list->head->oldValue = oldVal;
 		list->tail = list->head;
 		list->current = list->tail;
@@ -56,6 +57,7 @@ void addNode(linkedList* list, int row, int col, int val, int oldVal) {
 		list->tail->next->row = row;
 		list->tail->next->value = val;
 		list->tail->next->oldValue = oldVal;
+		list->tail->next->autoCells = 0;
 		list->tail->next->next = NULL;
 		list->tail->next->prev = list->tail;
 		list->tail = list->tail->next;
@@ -173,7 +175,7 @@ void printSudoku(Cell** sudoku) {
 	}
 }
 
-bool isRowValidGame(Cell** sudoku, int row, int col, int num) {/*##################### delete ###########################*/
+bool isRowValidGame(Cell** sudoku, int row, int col, int num) {
 	int j = 0;
 	for (j = 0; j < N; j++) {
 		if (sudoku[(row)*N + j]->value == num) {
@@ -185,7 +187,7 @@ bool isRowValidGame(Cell** sudoku, int row, int col, int num) {/*###############
 	return true;
 }
 
-bool isColValidGame(Cell** sudoku, int row, int col, int num) {/*##################### delete ###########################*/
+bool isColValidGame(Cell** sudoku, int row, int col, int num) {
 	int i;
 	for (i = 0; i < N; i++) {
 		if (sudoku[i*N + col]->value == num) {
@@ -197,7 +199,7 @@ bool isColValidGame(Cell** sudoku, int row, int col, int num) {/*###############
 	return true;
 }
 
-bool isBlockValidGame(Cell** sudoku, int startRow, int startCol, int row, int col, int num) {/*##################### delete ###########################*/
+bool isBlockValidGame(Cell** sudoku, int startRow, int startCol, int row, int col, int num) {
 	int i, j;
 	for (i = 0; i < blockHeight; i++) {
 		for (j = 0; j < blockWidth; j++) {
@@ -431,10 +433,16 @@ void set(Cell** currentSudoku, int row, int col, int val, char* oldCommand) {
 }
 
 void undo() {
-	int col, row, beforeUndoVal, afterUndoVal;
+	int col, row, beforeUndoVal, afterUndoVal, numOfAuto=0;
 	if (undo_redo.len == 0 || undoBit == 1) {
 		printf("Error: no moves to undo\n");
 		return;
+	}
+	numOfAuto = undo_redo.current->autoCells;
+	if (numOfAuto > 0) {
+		for (int i = 0; i < numOfAuto; i++) {
+			undo_redo.current = undo_redo.current->prev;
+		}
 	}
 	col = undo_redo.current->col;
 	row = undo_redo.current->row;
@@ -574,31 +582,27 @@ void autoFill(Cell** sudoku) {
 		printf("Error: board contains erroneous values\n");
 		return;
 	}
-	int* arr = (int*)malloc(blockWidth*blockHeight * sizeof(int));
+	int* arr = (int*)malloc(N * sizeof(int));
 	int numCounter = 0; /*for counting the number of the possible fills*/
 	int counter = 0; /*for counting the number of cell to autofill*/
-	int startRow;
-	int startCol;
-	for (int k = 0; k < (blockWidth*blockHeight); k++) {
-		for (int j = 0; j < (blockWidth*blockHeight); j++) {
-			if (currentSudoku[k*(blockWidth*blockHeight) + j]->empty == 0) {/*check only the empty cells*/
-				int startRow = k - k % blockHeight;
-				int startCol = j - j % blockWidth;
-				for (int z = 0; z < (blockHeight*blockWidth); z++) {/*for every empty cell in the sudoku we check which
+	int startRow, startCol, tempRow, tempCol, tempVal;
+	for (int k = 0; k < N; k++) {
+		for (int j = 0; j < N; j++) {
+			if (currentSudoku[k*N + j]->empty == 0) {/*check only the empty cells*/
+				startRow = k - k % blockHeight;
+				startCol = j - j % blockWidth;
+				for (int z = 0; z < N; z++) {/*for every empty cell in the sudoku we check which
 																	number between 1-N is valid for him. if there is more of
 																	1 option, numCounter wil be > 1*/
 					if (isRowValidGame(sudoku, k, j, z) && isColValidGame(sudoku, k, j, z) && isBlockValidGame(sudoku,startRow,startCol, k, j, z)) {
+						tempRow = k; tempCol = j; tempVal = z;
 						numCounter++;
 					}
 				}
 				if (numCounter == 1) {/*there is only 1 option between 1-N
 									  we search for the option and add to the list*/
-					for (int h = 0; h < (blockHeight*blockWidth); h++) {
-						if (isRowValidGame(sudoku, k, j, h) && isColValidGame(sudoku, k, j, h) && isBlockValidGame(sudoku, startRow, startCol, k, j, h)) {
-							arr[counter] = k; arr[counter + 1] = j; arr[counter + 2] = h; /*add to the list. k=row, j=col, h= val*/
-							counter++;
-						}
-					}
+					arr[counter] = tempRow; arr[counter + 1] = tempCol; arr[counter + 2] = tempVal;
+					counter = counter + 3;
 				}
 			}
 			numCounter = 0;
@@ -613,6 +617,7 @@ void autoFill(Cell** sudoku) {
 											  to which autofill its connected. when doing undo and it was a autofill node
 											  we will minus one the global counter (to be consistent)*/
 		set(sudoku, arr[g], arr[g + 1], arr[g + 2], NULL);
+		undo_redo.tail->autoCells = g+1;
 	}
 }
 

@@ -25,7 +25,7 @@ next- the next node in the linked list
 prev- the previous node in the linked list
 */
 typedef struct node {
-	int row, col, value, oldValue;
+	int row, col, value, oldValue, autoCells;
 	struct node* next;
 	struct node* prev;
 }node;

@@ -4,7 +4,7 @@
 #include "Solver.h"
 #include "Parser.h"
 
-int markError = 1, undoBit, redoBit;/*The bit is to the case that we did undo\redo to the first cell in the undo_redo list*/
+int markError = 1, undoBit, redoBit, autoFillBit = 0;/*The bit is to the case that we did undo\redo to the first cell in the undo_redo list*/
 mode = 2; /*1 - solve mode and 2 - edit mode and 0 - init*/
 		  /*n, m,N - n=num of rows of blocks, m=num of columns of blocks*/
 linkedList undo_redo;
@@ -369,36 +369,38 @@ int checkNumOfEmptyCells(Cell** sudoku){
 	}
 }
 
-void set(Cell** currentSudoku, int row, int col, int val, char* oldCommand) {
+void set(Cell** sudoku, int row, int col, int val, char* oldCommand) {
 	bool rowValid, colValid, blockValid;
 	int oldVal, valid;
 	char* command;
-	if (currentSudoku[row*N + col]->fixed == 1) {
+	if (sudoku[row*N + col]->fixed == 1) {
 		printf("Error: cell is fixed\n");
 	}
 	else {
-		oldVal = currentSudoku[row*N + col]->value;
+		oldVal = sudoku[row*N + col]->value;
 		if (val == 0) { /*we initialize the cell, change it to an empty cell*/
-			currentSudoku[row*N + col]->value = 0;
-			currentSudoku[row*N + col]->empty = 0;
-			if (currentSudoku[row*N + col]->erroneous == 1) {
+			sudoku[row*N + col]->value = 0;
+			sudoku[row*N + col]->empty = 0;
+			if (sudoku[row*N + col]->erroneous == 1) {
 				erroneousFixDel(row, col, oldVal);
-				currentSudoku[row*N + col]->erroneous = 0;
+				sudoku[row*N + col]->erroneous = 0;
 			}
 		}
 		else {
-			currentSudoku[row*N + col]->value = val;
-			currentSudoku[row*N + col]->empty = 1;
-			if (currentSudoku[row*N + col]->erroneous == 1) {
+			sudoku[row*N + col]->value = val;
+			sudoku[row*N + col]->empty = 1;
+			if (sudoku[row*N + col]->erroneous == 1) {
 				erroneousFixDel(row, col, oldVal);
-				currentSudoku[row*N + col]->erroneous = 0;
+				sudoku[row*N + col]->erroneous = 0;
 				erroneousFixAdd(row, col, val);
 			}
 			else {
 				erroneousFixAdd(row, col, val);
 			}
 		}
-		printSudoku(currentSudoku);
+		if (autoFillBit == 0) {
+			printSudoku(sudoku);
+		}
 		if (undo_redo.len == 0) {
 			addNode(&undo_redo, row, col, val, oldVal);
 		}
@@ -418,8 +420,8 @@ void set(Cell** currentSudoku, int row, int col, int val, char* oldCommand) {
 				addNode(&undo_redo, row, col, val, oldVal);
 			}
 		}
-		if (mode == 1 && checkNumOfEmptyCells(currentSudoku) == 0) { /*Last cell was filled*/
-			valid = validate(currentSudoku);
+		if (mode == 1 && checkNumOfEmptyCells(sudoku) == 0) { /*Last cell was filled*/
+			valid = validate(sudoku);
 			if (valid == 0) {
 				printf("Puzzle solution erroneous\n");
 			}
@@ -432,30 +434,20 @@ void set(Cell** currentSudoku, int row, int col, int val, char* oldCommand) {
 	}
 }
 
-void undo() {
-	int col, row, beforeUndoVal, afterUndoVal, numOfAuto=0;
-	if (undo_redo.len == 0 || undoBit == 1) {
-		printf("Error: no moves to undo\n");
-		return;
-	}
-	numOfAuto = undo_redo.current->autoCells;
-	if (numOfAuto > 0) {
-		for (int i = 0; i < numOfAuto; i++) {
-			undo_redo.current = undo_redo.current->prev;
-		}
-	}
+void undoCurrent() {
+	int col, row, beforeUndoVal, afterUndoVal;
 	col = undo_redo.current->col;
 	row = undo_redo.current->row;
 	beforeUndoVal = undo_redo.current->value;
 	afterUndoVal = undo_redo.current->oldValue;
 	if (beforeUndoVal != 0 && afterUndoVal != 0) {
-		printf("Undo %d,%d: from %d to %d\n", (col+1), (row+1), beforeUndoVal, afterUndoVal);
+		printf("Undo %d,%d: from %d to %d\n", (col + 1), (row + 1), beforeUndoVal, afterUndoVal);
 	}
 	else if (beforeUndoVal == 0 && afterUndoVal == 0) {
-		printf("Undo %d,%d: from _ to _\n", (col+1), (row+1));
+		printf("Undo %d,%d: from _ to _\n", (col + 1), (row + 1));
 	}
 	else if (beforeUndoVal == 0) {
-		printf("Undo %d,%d: from _ to %d\n", (col+1), (row+1), afterUndoVal);
+		printf("Undo %d,%d: from _ to %d\n", (col + 1), (row + 1), afterUndoVal);
 		currentSudoku[row*N + col]->empty = 1;
 	}
 	else {
@@ -473,6 +465,33 @@ void undo() {
 	currentSudoku[row*N + col]->value = afterUndoVal;
 	if (afterUndoVal != 0) {
 		erroneousFixAdd(row, col, afterUndoVal);
+	}
+}
+
+void undo() {
+	int numOfAuto = 0;
+	node* temp = NULL;
+	if (undo_redo.len == 0 || undoBit == 1) {
+		printf("Error: no moves to undo\n");
+		return;
+	}
+	numOfAuto = undo_redo.current->autoCells;
+	if (numOfAuto > 0) {
+		for (int i = 0; i < numOfAuto-1; i++) {
+			undo_redo.current = undo_redo.current->prev;
+		}
+		for (int j = 0; j < numOfAuto; j++) {
+			temp = undo_redo.current;
+			undoCurrent();
+			undo_redo.current = temp->next;
+		}
+		undo_redo.current = temp;
+		for (int k = 0; k < numOfAuto; k++) {
+			undo_redo.current =undo_redo.current->prev;
+		}
+	}
+	else {
+		undoCurrent();
 	}
 }
 
@@ -582,7 +601,7 @@ void autoFill(Cell** sudoku) {
 		printf("Error: board contains erroneous values\n");
 		return;
 	}
-	int* arr = (int*)malloc(N * sizeof(int));
+	int* arr = (int*)malloc(N * sizeof(int)*3);
 	int numCounter = 0; /*for counting the number of the possible fills*/
 	int counter = 0; /*for counting the number of cell to autofill*/
 	int startRow, startCol, tempRow, tempCol, tempVal;
@@ -591,7 +610,7 @@ void autoFill(Cell** sudoku) {
 			if (currentSudoku[k*N + j]->empty == 0) {/*check only the empty cells*/
 				startRow = k - k % blockHeight;
 				startCol = j - j % blockWidth;
-				for (int z = 0; z < N; z++) {/*for every empty cell in the sudoku we check which
+				for (int z = 1; z <= N; z++) {/*for every empty cell in the sudoku we check which
 																	number between 1-N is valid for him. if there is more of
 																	1 option, numCounter wil be > 1*/
 					if (isRowValidGame(sudoku, k, j, z) && isColValidGame(sudoku, k, j, z) && isBlockValidGame(sudoku,startRow,startCol, k, j, z)) {
@@ -608,7 +627,7 @@ void autoFill(Cell** sudoku) {
 			numCounter = 0;
 		}
 	}
-	for (int g = 0; g < (counter / 3); g++) { /*should correct the undo/redo for this!
+	for (int g = 0; g < counter; g++) { /*should correct the undo/redo for this!
 											  option - insted of NULL we will send global counter that will be the number of
 											  autofill that happend - in order to determine while doint undo if the set that
 											  happend is connected to the autofill (if there will be 2 autofill one after other
@@ -616,9 +635,14 @@ void autoFill(Cell** sudoku) {
 											  and we need a new field in the cell node that determine: 0=no autofill and >0
 											  to which autofill its connected. when doing undo and it was a autofill node
 											  we will minus one the global counter (to be consistent)*/
+		autoFillBit = 1;
 		set(sudoku, arr[g], arr[g + 1], arr[g + 2], NULL);
+		printf("Cell <%d,%d> set to %d\n", arr[g+1], arr[g], arr[g+1]);
 		undo_redo.tail->autoCells = g+1;
+		g = g + 3;
 	}
+	printSudoku(sudoku);
+	autoFillBit = 0;
 }
 
 void num_solutions(Cell** sudoku) {

@@ -178,7 +178,7 @@ If the game is over we are now enable only command of exit or restart
 otherwise - we contine as usual.
 If the val isn't valid we print to the user an appropriate message.
 */
-void set(Cell** currentSudoku, int row, int col, int val, char* oldCommand);
+void set(Cell** sudoku, int row, int col, int val, char* oldCommand);
 
 void undo();
 

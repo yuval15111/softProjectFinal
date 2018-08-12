@@ -346,7 +346,7 @@ int isBoardErrorneus(Cell** sudoku){
 	int i, j;
 	for (i = 0; i < N; i++) {
 		for (j = 0; j < N; j++) {
-			if (sudoku[i* N + j]->erroneous == 1)
+			if (sudoku[i*N + j]->erroneous == 1)
 			{
 				return 1;
 			}
@@ -404,7 +404,7 @@ void set(Cell** sudoku, int row, int col, int val, char* oldCommand) {
 		if (undo_redo.len == 0) {
 			addNode(&undo_redo, row, col, val, oldVal);
 		}
-		else if (undoBit) { /*we did undo to the first cell in undo_redo list*/
+		else if (undoBit==1) { /*we did undo to the first cell in undo_redo list*/
 			deleteListFrom(undo_redo.current); /*deleteListFrom(X) - delete X and the nodes after until the end*/
 			initList(&undo_redo);
 			addNode(&undo_redo, row, col, val, oldVal);
@@ -487,7 +487,11 @@ void undo() {
 		}
 		undo_redo.current = temp;
 		for (int k = 0; k < numOfAuto; k++) {
-			undo_redo.current =undo_redo.current->prev;
+			if (undo_redo.current->prev == NULL) {
+				undoBit = 1;
+				break;
+			}
+			undo_redo.current = undo_redo.current->prev;
 		}
 	}
 	else {
@@ -495,24 +499,7 @@ void undo() {
 	}
 }
 
-void redo() {
-	int col, row, beforeRedoVal, afterRedoVal;
-	if (undo_redo.len == 0 || (undo_redo.current->next == NULL && undoBit == 0)) {
-		printf("Error: no moves to redo\n");
-		return;
-	}
-	if (undo_redo.current->next == NULL && undoBit == 1) {
-		col = undo_redo.current->col;
-		row = undo_redo.current->row;
-		beforeRedoVal = undo_redo.current->oldValue;
-		afterRedoVal = undo_redo.current->value;
-	}
-	else {
-		col = undo_redo.current->next->col;
-		row = undo_redo.current->next->row;
-		beforeRedoVal = undo_redo.current->next->oldValue;
-		afterRedoVal = undo_redo.current->next->value;
-	}
+void redoCurrent(int row, int col, int beforeRedoVal, int afterRedoVal) {
 	if (beforeRedoVal != 0 && afterRedoVal != 0) {
 		printf("Redo %d,%d: from %d to %d\n", (col + 1), (row + 1), beforeRedoVal, afterRedoVal);
 	}
@@ -543,6 +530,46 @@ void redo() {
 	}
 }
 
+void redo() {
+	int col, row, beforeRedoVal, afterRedoVal;
+	if (undo_redo.len == 0 || (undo_redo.current->next == NULL && undoBit == 0)) {
+		printf("Error: no moves to redo\n");
+		return;
+	}
+	if (undo_redo.current->next == NULL && undoBit == 1) {
+		col = undo_redo.current->col;
+		row = undo_redo.current->row;
+		beforeRedoVal = undo_redo.current->oldValue;
+		afterRedoVal = undo_redo.current->value;
+		redoCurrent(row, col, beforeRedoVal, afterRedoVal);
+	}
+	else if (undo_redo.current->next->autoCells == 0) {
+		col = undo_redo.current->next->col;
+		row = undo_redo.current->next->row;
+		beforeRedoVal = undo_redo.current->next->oldValue;
+		afterRedoVal = undo_redo.current->next->value;
+		redoCurrent(row, col, beforeRedoVal, afterRedoVal);
+	}
+	else {
+		if (undoBit == 1 && undo_redo.current->autoCells == 1) {
+			col = undo_redo.current->col;
+			row = undo_redo.current->row;
+			beforeRedoVal = undo_redo.current->oldValue;
+			afterRedoVal = undo_redo.current->value;
+			redoCurrent(row, col, beforeRedoVal, afterRedoVal);
+			undo_redo.current = undo_redo.current->prev;
+			undoBit = 0;
+		}
+		while ((undo_redo.current->next != NULL) && (undo_redo.current->next->autoCells - 1 == undo_redo.current->autoCells)) {
+			col = undo_redo.current->next->col;
+			row = undo_redo.current->next->row;
+			beforeRedoVal = undo_redo.current->next->oldValue;
+			afterRedoVal = undo_redo.current->next->value;
+			redoCurrent(row, col, beforeRedoVal, afterRedoVal);
+		}
+	}
+}
+
 void exitGame() {
 	freeSudoku(currentSudoku);
 	freeSudoku(solvedSudoku);
@@ -553,6 +580,9 @@ void exitGame() {
 void reset() {
 	int i = 0;
 	for (i = 0; i < undo_redo.len; i++) {
+		if (undoBit == 1) {
+			break;
+		}
 		undo();
 	}
 	freeList(undo_redo.head);
@@ -568,10 +598,10 @@ void save(Cell** sudoku, char* path) { /*we should check if it is possible to sa
 			printf("Error: board contains errorneus values\n");
 			return;
 		}
-		if (validate(currentSudoku) == 2) { /*shouldnt use validate because of the printf in validate!!!!!!!!!!!!!!*/
+/*		if (validate(currentSudoku) == 2) { shouldnt use validate because of the printf in validate!!!!!!!!!!!!!!
 			printf("Error: board validation failed\n");
 			return;
-		}
+		}*/
 	}
 	FILE* fd = fopen(path, "w");
 	if (fd == NULL) {
@@ -582,7 +612,12 @@ void save(Cell** sudoku, char* path) { /*we should check if it is possible to sa
 				fprintf(fd,"\n");
 		for (int j = 0; j < (blockWidth*blockHeight); j++) {
 			if (mode == 2) {
-				fprintf(fd, "%c%c%c", (currentSudoku[k*(blockWidth*blockHeight) + j]->value+'0'),'.',' ');
+				if (currentSudoku[k*(blockWidth*blockHeight) + j]->empty == 0) {
+					fprintf(fd, "%c%c", (currentSudoku[k*(blockWidth*blockHeight) + j]->value + '0'), ' ');
+				}
+				else {
+					fprintf(fd, "%c%c%c", (currentSudoku[k*(blockWidth*blockHeight) + j]->value + '0'), '.', ' ');
+				}
 			}
 			else {
 				if (currentSudoku[k*(blockWidth*blockHeight) + j]->fixed == 1) {
@@ -627,7 +662,7 @@ void autoFill(Cell** sudoku) {
 			numCounter = 0;
 		}
 	}
-	for (int g = 0; g < counter; g++) { /*should correct the undo/redo for this!
+	for (int g = 0; g < counter; g=g+3) { /*should correct the undo/redo for this!
 											  option - insted of NULL we will send global counter that will be the number of
 											  autofill that happend - in order to determine while doint undo if the set that
 											  happend is connected to the autofill (if there will be 2 autofill one after other
@@ -637,9 +672,8 @@ void autoFill(Cell** sudoku) {
 											  we will minus one the global counter (to be consistent)*/
 		autoFillBit = 1;
 		set(sudoku, arr[g], arr[g + 1], arr[g + 2], NULL);
-		printf("Cell <%d,%d> set to %d\n", arr[g+1], arr[g], arr[g+1]);
-		undo_redo.tail->autoCells = g+1;
-		g = g + 3;
+		printf("Cell <%d,%d> set to %d\n", arr[g+1]+1, arr[g]+1, arr[g+2]);
+		undo_redo.tail->autoCells = (g/3)+1;
 	}
 	printSudoku(sudoku);
 	autoFillBit = 0;
@@ -668,6 +702,16 @@ void num_solutions(Cell** sudoku) {
 	}
 	else printf("The puzzle has more than 1 solution, try to edit it further\n");
 	return;
+}
+
+void checkErroneous(Cell** sudoku) {
+	for (int i = 0; i < N; i++) {
+		for (int j = 0; j < N; j++) {
+			if (sudoku[i*N + j]->value != 0) {
+				erroneousFixAdd(i, j, sudoku[i*N + j]->value);
+			}
+		}
+	}
 }
 
 void solve(char* path) {
@@ -724,7 +768,7 @@ void solve(char* path) {
 	mode = 1;
 	initList(&undo_redo);
 	currentSudoku = loadBoard;
-
+	checkErroneous(currentSudoku);
 }
 
 void edit(char* path) {
@@ -790,6 +834,7 @@ void edit(char* path) {
 	markError = 1;
 	initList(&undo_redo);
 	currentSudoku = loadBoard;
+	checkErroneous(currentSudoku);
 }
 
 void doCommand(char* command) {
@@ -813,7 +858,6 @@ void doCommand(char* command) {
 	}
 
 	else if (command[0] == '4') {/*should be reset!!!!!!!!!!!!!!!!!!!!!!!!*/
-		free(command);
 		reset();
 	}
 	else if (command[0] == '5') {

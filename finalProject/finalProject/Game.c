@@ -4,9 +4,14 @@
 #include "Solver.h"
 #include "Parser.h"
 
-int markError = 1, undoBit, redoBit, autoFillBit = 0;/*The bit is to the case that we did undo\redo to the first cell in the undo_redo list*/
+int markError = 1; /*by default = 1*/
+int undoBit; /*when we did undo to the first cell in the undo_redo list -> undoBit=1*/
+int autoFillBit = 0; /*autoFillBit = 1 when the autofill command succeeds*/
 mode = 2; /*1 - solve mode and 2 - edit mode and 0 - init*/
-		  /*n, m,N - n=num of rows of blocks, m=num of columns of blocks*/
+		
+/*
+A linked list for all the play moves
+*/
 linkedList undo_redo;
 
 
@@ -66,13 +71,13 @@ void addNode(linkedList* list, int row, int col, int val, int oldVal) {
 	list->len++;
 }
 
-void deleteNode(Cell* cell, linkedList* list, node* origNode) {
+void deleteErrorNeibNode(Cell* cell, linkedList* list, node* origNode) {
 	if (list->len == 1) {
 		free(origNode);
 		initList(&cell->erroneousNeib);
 	}
 	else {
-		if ((list->head->row == origNode->row) && (list->head->col == origNode->col)) { /*this is origNode*/
+		if ((list->head->row == origNode->row) && (list->head->col == origNode->col)) { /*the head is origNode*/
 			list->head = list->head->next;
 			origNode->next->prev = origNode->prev;
 			list->current = list->head;
@@ -102,6 +107,7 @@ void deleteListFrom(node* nodeToBeDeleted) {
 		undo_redo.len = undo_redo.len - numOfDeletedNodes;
 	}
 }
+
 Cell* createCell(int value) {
 	Cell* cell = (Cell*)malloc(sizeof(Cell));
 	if (cell == NULL) {
@@ -325,7 +331,7 @@ void erroneousFixDel(int row, int col, int val) {
 		tempRow = currentSudoku[row*N + col]->erroneousNeib.head->row;
 		tempCol = currentSudoku[row*N + col]->erroneousNeib.head->col;
 		if (currentSudoku[tempRow*N + tempCol]->fixed == 1) {
-			deleteNode(currentSudoku[row*N + col], &currentSudoku[row*N + col]->erroneousNeib, currentSudoku[row*N + col]->erroneousNeib.head); /*In order to Delete the main node's list*/
+			deleteErrorNeibNode(currentSudoku[row*N + col], &currentSudoku[row*N + col]->erroneousNeib, currentSudoku[row*N + col]->erroneousNeib.head); /*In order to Delete the main node's list*/
 			continue;
 		}
 		currentSudoku[tempRow*N + tempCol]->erroneousNeib.current = currentSudoku[tempRow*N + tempCol]->erroneousNeib.head;
@@ -333,8 +339,8 @@ void erroneousFixDel(int row, int col, int val) {
 			currentSudoku[tempRow*N + tempCol]->erroneousNeib.current->col != col) {
 			currentSudoku[tempRow*N + tempCol]->erroneousNeib.current = currentSudoku[tempRow*N + tempCol]->erroneousNeib.current->next;
 		}
-		deleteNode(currentSudoku[tempRow*N + tempCol], &currentSudoku[tempRow*N + tempCol]->erroneousNeib, currentSudoku[tempRow*N + tempCol]->erroneousNeib.current);/*Delete the main node from the other lists */
-		deleteNode(currentSudoku[row*N + col], &currentSudoku[row*N + col]->erroneousNeib, currentSudoku[row*N + col]->erroneousNeib.head); /*In order to Delete the main node's list*/
+		deleteErrorNeibNode(currentSudoku[tempRow*N + tempCol], &currentSudoku[tempRow*N + tempCol]->erroneousNeib, currentSudoku[tempRow*N + tempCol]->erroneousNeib.current);/*Delete the main node from the other lists */
+		deleteErrorNeibNode(currentSudoku[row*N + col], &currentSudoku[row*N + col]->erroneousNeib, currentSudoku[row*N + col]->erroneousNeib.head); /*In order to Delete the main node's list*/
 		currentSudoku[tempRow*N + tempCol]->erroneousNeib.current = currentSudoku[tempRow*N + tempCol]->erroneousNeib.head;
 		if (currentSudoku[tempRow*N + tempCol]->erroneousNeib.len == 0) {
 			currentSudoku[tempRow*N + tempCol]->erroneous = 0;
@@ -662,14 +668,7 @@ void autoFill(Cell** sudoku) {
 			numCounter = 0;
 		}
 	}
-	for (int g = 0; g < counter; g=g+3) { /*should correct the undo/redo for this!
-											  option - insted of NULL we will send global counter that will be the number of
-											  autofill that happend - in order to determine while doint undo if the set that
-											  happend is connected to the autofill (if there will be 2 autofill one after other
-											  so after 1 undo we will get only one backward in the undo list and not 2)
-											  and we need a new field in the cell node that determine: 0=no autofill and >0
-											  to which autofill its connected. when doing undo and it was a autofill node
-											  we will minus one the global counter (to be consistent)*/
+	for (int g = 0; g < counter; g=g+3) {
 		autoFillBit = 1;
 		set(sudoku, arr[g], arr[g + 1], arr[g + 2], NULL);
 		printf("Cell <%d,%d> set to %d\n", arr[g+1]+1, arr[g]+1, arr[g+2]);
@@ -844,7 +843,7 @@ void doCommand(char* command) {
 	else if (idCommand == 2) {
 		edit(command);
 	}
-	else if (idCommand == 3) {/*save*/
+	else if (idCommand == 3) {
 		save(currentSudoku, command);
 	}
 	else if (command[0] == '1') {
@@ -867,19 +866,19 @@ void doCommand(char* command) {
 	else if (command[0] == '6') {
 		markError = command[1] - '0';
 	}
-	else if (command[0] == '7') {/*print_board*/
+	else if (command[0] == '7') {
 		printSudoku(currentSudoku);
 	}
-	else if (command[0] == '8') {/*autofill*/
+	else if (command[0] == '8') {
 		autoFill(currentSudoku);
 	}
-	else if (command[0] == '9') {/*num_solutions*/
+	else if (command[0] == '9') {
 		num_solutions(currentSudoku);
 	}
-	else if (command[0] == 'a') {/*redo*/
+	else if (command[0] == 'a') {
 		redo();
 	}
-	else if (command[0] == 'b') {/*undo*/
+	else if (command[0] == 'b') {
 		undo();
 	}
 	else if (command[0] == 'c') { /*generate*/
@@ -890,10 +889,6 @@ void doCommand(char* command) {
 
 void getSolvedSudoku(Cell** boardGeneration) {
 	solvedSudoku = boardGeneration;
-}
-
-void getSudokuWithHints(Cell** sudokuWithHints) {/*########################## delete ###########################*/
-	currentSudoku = sudokuWithHints;
 }
 
 void freeSudoku(Cell** sudoku) {

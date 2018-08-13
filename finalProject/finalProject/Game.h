@@ -11,8 +11,8 @@ The game takes place in this module.
 #include<stdbool.h>
 int mode; /*1 - solve command and 2 - edit and 0 - init*/
 int idCommand; /*1 - solve command and 2 - edit and 0 - else 3-save*/
-int blockWidth, blockHeight, N;
-int numOfEmptyCells;
+int blockWidth, blockHeight, N; /*blockWidth=m; blockHeight=n; N=n*m*/
+int numOfEmptyCells; /*the number of empty cells in the sudoku*/
 
 /*
 The struct node will respresent every 'cell' in the  doubly linked list below
@@ -75,17 +75,36 @@ the number of cells the function did free to
 int freeList(node* headNode);
 
 /*
-This function initiallize the doubly linked list: 
+This function initiallizes the doubly linked list: 
 allocates space in memory for the 'head' field
-
-
+init head.prev and head.next as NULL
+init the len field to 0
+define tail and current to be the head
 */
 void initList(linkedList* l);
 
+/*
+This function adds a node to the end of a linked list,
+it gets a doubly linked list and the fields of the new node:
+allocates memory space for the node if needed,
+updates the tail and current to the new node,
+update the len field
+*/
 void addNode(linkedList* list, int row, int col, int val, int oldVal);
 
-void deleteNode(Cell* cell, linkedList* list, node* origNode);
+/*
+This function deletes a specific node from the erroneousNeib doubly linked list
+it gets the cell of the node to be deleted, a doubly linked list and the node to be deleted:
+if origNode is the only node in the linked list, it frees the node and creates a new erroneousNeib list
+else it updates the list and its len and frees origNode
+*/
+void deleteErrorNeibNode(Cell* cell, linkedList* list, node* origNode);
 
+/*
+This function deletes all the nodes from 'nodeToBeDeleted' to the tail in the doubly linked list:
+if nodeToBeDeleted is the head it frees the entire list by using 'freeList' function and updates the len to 0
+else, it updates the last node to be NULL and deletes the node from nodeToBeDeleted, and updates the len
+*/
 void deleteListFrom(node* nodeToBeDeleted);
 
 /*
@@ -104,9 +123,17 @@ copy of the cell
 */
 Cell* copyCell(Cell* cell);
 
+/*
+This function prints the separators between the blocks of the sudoku
+*/
 void printSeparator();
 
-/*####################### delete delete delete #########################################
+/*
+This function prints the sudoku boards as instructed using printSeparator func
+*/
+void printSudoku(Cell** sudoku);
+
+/*
 This function checks if the num parameter is valid in the row of the sudoku.
 (checks if num is already exist in the row of the sudoku)
 @return
@@ -115,7 +142,7 @@ False - otherwise
 */
 bool isRowValidGame(Cell** sudoku, int row, int col, int num);
 
-/*####################### delete delete delete #########################################
+/*
 This function checks if the num parameter is valid in the column of the sudoku.
 (checks if num is already exist in the column of the sudoku)
 @return
@@ -124,7 +151,7 @@ False - otherwise
 */
 bool isColValidGame(Cell** sudoku, int row, int col, int num);
 
-/*####################### delete delete delete #########################################
+/*
 This function checks if the num parameter is valid in the block of the sudoku.
 (checks if num is already exist in the block of the sudoku)
 @return
@@ -133,7 +160,7 @@ False - otherwise
 */
 bool isBlockValidGame(Cell** sudoku, int startRow, int startCol, int row, int col, int num);
 
-/*
+/*##############change after doing ILP##############################
 This function get the current game Sudoku and checks if there is any solution of this board
 by using determenistic Backtrack algorithm
 If there is no solution it prints a message to the user,
@@ -142,14 +169,14 @@ and print a Appropriate message to the user.
 */
 int validate(Cell** currentSudoku);
 
-/*
+/*######################change after doing ILP#####################
 This function get row and column.
 @return
 the value of the cell in solvedSudoku[row][column] that saved the solution of the current board.
 */
 void hint(int row, int col);
 
-/*
+/*#####################delete?############################
 This function checks if the board is full:
 @return
 True - if the board is full (and correctly)
@@ -157,12 +184,48 @@ Flase - the board isnt full
 */
 bool isGameOver(Cell** sudoku);
 
+/*
+This function handles the erroneous cells in a given row
+it gets a row, col and a value:
+it goes over the columns of the sudoku and checks for each cell in the given row if it's value equals val,
+if so- checks wether j!=col (if its not the given cell),
+if so- these cells are erroneous,
+it adds the cell it found to the erroneousNeib list of the given cell,
+and adds the given cell to the erroneousNeib list of the cell it found
+in addition it updates the erroneous fiels of the cells to 1
+*/
 void checkErrorRow(int row, int col, int val);
 
+/*
+This function handles the erroneous cells in a given column
+it gets a row, col and a value:
+it goes over the rows of the sudoku and checks for each cell in the given column if it's value equals val,
+if so- checks wether j!=row (if its not the given cell),
+if so- these cells are erroneous,
+it adds the cell it found to the erroneousNeib list of the given cell,
+and adds the given cell to the erroneousNeib list of the cell it found
+in addition it updates the erroneous fiels of the cells to 1
+*/
 void checkErrorCol(int row, int col, int val);
 
+/*
+This function handles the erroneous cells in a given block
+it gets a row, col and a value:
+startRow= the index of the first row of the block
+startCol= the index of the first column in the block
+it goes over the rows of the block and over the columns of the block,
+and checks for each cell in the given block if it's value equals val,
+if so- checks wether the cell it found is not at the same row and column (if it is in the same row for example, we found it already in 'checkReeoeRow' func),
+if so- these cells are erroneous,
+it adds the cell it found to the erroneousNeib list of the given cell,
+and adds the given cell to the erroneousNeib list of the cell it found
+in addition it updates the erroneous fiels of the cells to 1
+*/
 void checkErrorBlock(int row, int col, int val);
 
+/*
+
+*/
 void erroneousFixAdd(int row, int col, int val);
 
 void erroneousFixDel(int row, int col, int val);
@@ -181,11 +244,6 @@ If the val isn't valid we print to the user an appropriate message.
 void set(Cell** sudoku, int row, int col, int val, char* oldCommand);
 
 void undo();
-
-/*
-This function print sudoku boards in a beatiful way
-*/
-void printSudoku(Cell** sudoku);
 
 /*
 This function update the address of solvedSudoku that saved the solution of current sudoku in game.c module

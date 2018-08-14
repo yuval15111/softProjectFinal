@@ -335,7 +335,7 @@ void erroneousFixDel(int row, int col, int val) {
 			continue;
 		}
 		currentSudoku[tempRow*N + tempCol]->erroneousNeib.current = currentSudoku[tempRow*N + tempCol]->erroneousNeib.head;
-		while (currentSudoku[tempRow*N + tempCol]->erroneousNeib.current->row != row || /*Looking for the main node*/
+		while (currentSudoku[tempRow*N + tempCol]->erroneousNeib.current->row != row || /*Looking for the node to be deleted*/
 			currentSudoku[tempRow*N + tempCol]->erroneousNeib.current->col != col) {
 			currentSudoku[tempRow*N + tempCol]->erroneousNeib.current = currentSudoku[tempRow*N + tempCol]->erroneousNeib.current->next;
 		}
@@ -889,6 +889,10 @@ void doCommand(char* command) {
 
 void getSolvedSudoku(Cell** boardGeneration) {
 	solvedSudoku = boardGeneration;
+}
+
+void getSudokuWithHints(Cell** sudokuWithHints) {
+	currentSudoku = sudokuWithHints;
 }
 
 void freeSudoku(Cell** sudoku) {

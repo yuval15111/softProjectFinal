@@ -215,8 +215,8 @@ startRow= the index of the first row of the block
 startCol= the index of the first column in the block
 it goes over the rows of the block and over the columns of the block,
 and checks for each cell in the given block if it's value equals val,
-if so- checks wether the cell it found is not at the same row and column (if it is in the same row for example, we found it already in 'checkReeoeRow' func),
-if so- these cells are erroneous,
+if so-> checks wether the cell it found is not at the same row and column (if it is in the same row for example, we found it already in 'checkReeoeRow' func),
+if so-> these cells are erroneous,
 it adds the cell it found to the erroneousNeib list of the given cell,
 and adds the given cell to the erroneousNeib list of the cell it found
 in addition it updates the erroneous fiels of the cells to 1
@@ -224,14 +224,40 @@ in addition it updates the erroneous fiels of the cells to 1
 void checkErrorBlock(int row, int col, int val);
 
 /*
-
+This function handles all the erroneous cells after inserting a new value to the sudoku:
+it gets the row, col and value of the new cell in the sudoku
+it uses 'checkErrorRow', 'checkErrorCol' and 'checkErrorBlock' functions.
 */
 void erroneousFixAdd(int row, int col, int val);
 
+/*
+This function handles all the erroneous cells after deleting value from the sudoku:
+it gets the row, col and value of the deleted cell
+the function goes over the erroneousNieb list of the deleted cell, and for every cell C in that list:
+1. delete C's node from the deleted cell's list
+2. if the C is not fixed: 
+   2.1 delete the deleted cell's node from the C's list
+   2.2 update erroneousNieb len of C and if needed update it's erroneous field (if len=0)
+*/
 void erroneousFixDel(int row, int col, int val);
 
+/*
+This function checks if there is an erroneous cell in the sudoku:
+it gets a sudoku, 
+it goes over all the cells in the sudoku and checks it's erroneous field
+@return
+1 if erroneous, 0 if not erroneous
+*/
 int isBoardErrorneus(Cell** sudoku);
 
+/*
+This function counts the number of empty cells in the sudoku:
+it gets a sudoku,
+it goes over all the cells in the sudoku and checks it's empty field,
+if the cell is empty - adds the counter 1
+@return
+the counter
+*/
 int checkNumOfEmptyCells(Cell** sudoku);
 
 /*

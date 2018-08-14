@@ -118,12 +118,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Game.c" />
+    <ClCompile Include="ILPAlgo.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="Parser.c" />
     <ClCompile Include="Solver.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
+    <ClInclude Include="ILPAlgo.h" />
     <ClInclude Include="Parser.h" />
     <ClInclude Include="Solver.h" />
   </ItemGroup>

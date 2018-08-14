@@ -3,6 +3,7 @@
 #include<stdbool.h>
 #include "Solver.h"
 
+
 /*global variables the keep the current col and row we use*/
 int row = 0, col = 0;
 

@@ -4,6 +4,7 @@
 #include<ctype.h>
 #include "Game.h"
 
+
 int initNumberOfHints() {/*#######################################3delete###########################*/
 	char hints[20];
 	int flag = 1;

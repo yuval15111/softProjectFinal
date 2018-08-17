@@ -9,7 +9,7 @@ The game takes place in this module.
 #ifndef GAME_H_
 #define GAME_H_
 #include<stdbool.h>
-int mode; /*1 - solve command and 2 - edit and 0 - init*/
+/*mode: 1 - solve command and 2 - edit and 0 - init*/
 int idCommand; /*1 - solve command and 2 - edit and 0 - else 3-save*/
 int blockWidth, blockHeight, N; /*blockWidth=m; blockHeight=n; N=n*m*/
 int numOfEmptyCells; /*the number of empty cells in the sudoku*/

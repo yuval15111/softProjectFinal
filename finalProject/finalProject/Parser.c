@@ -5,6 +5,7 @@
 #include "Game.h"
 
 extern Cell** currentSudoku;
+extern mode;
 
 int initNumberOfHints() {/*#######################################3delete###########################*/
 	char hints[20];

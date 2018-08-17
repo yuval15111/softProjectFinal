@@ -3,11 +3,12 @@
 #include <fcntl.h>
 #include "Solver.h"
 #include "Parser.h"
+#include "Game.h"
 
 int markError = 1; /*by default = 1*/
 int undoBit; /*when we did undo to the first cell in the undo_redo list -> undoBit=1*/
 int autoFillBit = 0; /*autoFillBit = 1 when the autofill command succeeds*/
-mode = 2; /*1 - solve mode and 2 - edit mode and 0 - init*/
+int mode = 2; /*1 - solve mode and 2 - edit mode and 0 - init*/
 		
 /*
 A linked list for all the play moves
@@ -138,7 +139,8 @@ Cell* copyCell(Cell* cell) {
 }
 
 void printSeparator() {
-	for (int i = 0; i < 4 * N + blockWidth + 1; i++) {
+	int i = 0;
+	for (i = 0; i < 4 * N + blockWidth + 1; i++) {
 		printf("-");
 	}
 	printf("\n");
@@ -230,7 +232,7 @@ int validate(Cell** currentSudoku) { /*return 0 - erroneous board, 1 - solvable,
 	ret = ILPSolver();
 	if (ret == 1) {
 
-		// board is solveable
+		/* board is solveable*/
 		printf("Validation passes: board is solvable/n");
 		return 1;
 	}
@@ -261,7 +263,7 @@ void hint(int row, int col) {
 		return;
 	}
 	else if (ret == 1) {
-		printf("Hint: set cell to %d\n", solvedSudoku[row*N + col]);
+		printf("Hint: set cell to %d\n", solvedSudoku[row*N + col]->value);
 	}
 }
 
@@ -278,7 +280,8 @@ bool isGameOver(Cell** sudoku) {/*############################## delete ########
 }
 
 void checkErrorRow(int row, int col, int val) {
-	for (int j = 0; j < N; j++) {
+	int j = 0;
+	for (j = 0; j < N; j++) {
 		if (currentSudoku[(row)*N + j]->value == val) {
 			if (j != col) {
 				currentSudoku[row*N + col]->erroneous = 1;
@@ -293,7 +296,8 @@ void checkErrorRow(int row, int col, int val) {
 }
 
 void checkErrorCol(int row, int col, int val) {
-	for (int j = 0; j < N; j++) {
+	int j = 0;
+	for (j = 0; j < N; j++) {
 		if (currentSudoku[j*N + col]->value == val) {
 			if (j != row) {
 				currentSudoku[row*N + col]->erroneous = 1;
@@ -308,10 +312,11 @@ void checkErrorCol(int row, int col, int val) {
 }
 
 void checkErrorBlock(int row, int col, int val) {
-	int startRow = row - row % blockHeight;
-	int startCol = col - col % blockWidth;
-	for (int i = 0; i < blockHeight; i++) {
-		for (int j = 0; j < blockWidth; j++) {
+	int i, j, startRow, startCol;
+	startRow = row - row % blockHeight;
+	startCol = col - col % blockWidth;
+	for (i = 0; i < blockHeight; i++) {
+		for (j = 0; j < blockWidth; j++) {
 			if (currentSudoku[(i + startRow)*N + j + startCol]->value == val) {
 				if (row != i + startRow && col != j + startCol) {
 					currentSudoku[row*N + col]->erroneous = 1;
@@ -482,7 +487,7 @@ void undoCurrent() {
 }
 
 void undo() {
-	int numOfAuto = 0;
+	int numOfAuto = 0, j, k, i;
 	node* temp = NULL;
 	if (undo_redo.len == 0 || undoBit == 1) {
 		printf("Error: no moves to undo\n");
@@ -490,16 +495,16 @@ void undo() {
 	}
 	numOfAuto = undo_redo.current->autoCells;
 	if (numOfAuto > 0) {
-		for (int i = 0; i < numOfAuto-1; i++) {
+		for (i = 0; i < numOfAuto-1; i++) {
 			undo_redo.current = undo_redo.current->prev;
 		}
-		for (int j = 0; j < numOfAuto; j++) {
+		for (j = 0; j < numOfAuto; j++) {
 			temp = undo_redo.current;
 			undoCurrent();
 			undo_redo.current = temp->next;
 		}
 		undo_redo.current = temp;
-		for (int k = 0; k < numOfAuto; k++) {
+		for (k = 0; k < numOfAuto; k++) {
 			if (undo_redo.current->prev == NULL) {
 				undoBit = 1;
 				break;
@@ -606,6 +611,7 @@ void reset() {
 void save(Cell** sudoku, char* path) { /*we should check if it is possible to save an erroneus board in solve mode,
 									   i think its possilbe. If its possible, we need to check after loading the board in solve
 									   and edit if there is and erroneus cells*/
+	int k, j;
 	if (mode == 2) {
 		if (isBoardErrorneus(sudoku) == 1) {
 			printf("Error: board contains errorneus values\n");
@@ -621,9 +627,9 @@ void save(Cell** sudoku, char* path) { /*we should check if it is possible to sa
 		printf("Error: File cannot be created or modified\n");
 	}
 	fprintf(fd, "%c%c%c", (blockWidth+'0'),' ', (blockHeight+'0'));
-	for (int k = 0; k < (blockWidth*blockHeight); k++) {
+	for (k = 0; k < (blockWidth*blockHeight); k++) {
 				fprintf(fd,"\n");
-		for (int j = 0; j < (blockWidth*blockHeight); j++) {
+		for (j = 0; j < (blockWidth*blockHeight); j++) {
 			if (mode == 2) {
 				if (currentSudoku[k*(blockWidth*blockHeight) + j]->empty == 0) {
 					fprintf(fd, "%c%c", (currentSudoku[k*(blockWidth*blockHeight) + j]->value + '0'), ' ');
@@ -645,6 +651,7 @@ void save(Cell** sudoku, char* path) { /*we should check if it is possible to sa
 }
 
 void autoFill(Cell** sudoku) {
+	int k, j, z, g;
 	if (isBoardErrorneus(sudoku) == 1) {
 		printf("Error: board contains erroneous values\n");
 		return;
@@ -653,12 +660,12 @@ void autoFill(Cell** sudoku) {
 	int numCounter = 0; /*for counting the number of the possible fills*/
 	int counter = 0; /*for counting the number of cell to autofill*/
 	int startRow, startCol, tempRow, tempCol, tempVal;
-	for (int k = 0; k < N; k++) {
-		for (int j = 0; j < N; j++) {
+	for (k = 0; k < N; k++) {
+		for (j = 0; j < N; j++) {
 			if (currentSudoku[k*N + j]->empty == 0) {/*check only the empty cells*/
 				startRow = k - k % blockHeight;
 				startCol = j - j % blockWidth;
-				for (int z = 1; z <= N; z++) {/*for every empty cell in the sudoku we check which
+				for (z = 1; z <= N; z++) {/*for every empty cell in the sudoku we check which
 																	number between 1-N is valid for him. if there is more of
 																	1 option, numCounter wil be > 1*/
 					if (isRowValidGame(sudoku, k, j, z) && isColValidGame(sudoku, k, j, z) && isBlockValidGame(sudoku,startRow,startCol, k, j, z)) {
@@ -675,7 +682,7 @@ void autoFill(Cell** sudoku) {
 			numCounter = 0;
 		}
 	}
-	for (int g = 0; g < counter; g=g+3) {
+	for (g = 0; g < counter; g=g+3) {
 		autoFillBit = 1;
 		set(sudoku, arr[g], arr[g + 1], arr[g + 2], NULL);
 		printf("Cell <%d,%d> set to %d\n", arr[g+1]+1, arr[g]+1, arr[g+2]);
@@ -686,13 +693,14 @@ void autoFill(Cell** sudoku) {
 }
 
 void num_solutions(Cell** sudoku) {
+	int i, j;
 	if (isBoardErrorneus(sudoku) == 1) {
 		printf("Error: board contains erroneous values\n");
 		return;
 	}
 	Cell** temp = (Cell**)malloc(sizeof(Cell*)*(N*N));
-	for (int i = 0; i < N; i++) {
-		for (int j = 0; j < N; j++) {
+	for (i = 0; i < N; i++) {
+		for (j = 0; j < N; j++) {
 			temp[i*N + j] = createCell(currentSudoku[i*N + j]->value);
 			if (temp[i*N + j]->value != 0) {
 				temp[i*N + j]->fixed = 1;
@@ -711,8 +719,9 @@ void num_solutions(Cell** sudoku) {
 }
 
 void checkErroneous(Cell** sudoku) {
-	for (int i = 0; i < N; i++) {
-		for (int j = 0; j < N; j++) {
+	int i, j;
+	for (i = 0; i < N; i++) {
+		for (j = 0; j < N; j++) {
 			if (sudoku[i*N + j]->value != 0) {
 				erroneousFixAdd(i, j, sudoku[i*N + j]->value);
 			}
@@ -721,10 +730,10 @@ void checkErroneous(Cell** sudoku) {
 }
 
 void solve(char* path) {
-	char* fd;
+	FILE* fd;
 	char buff[256] = "\0";
 	char number[256] = "\0";
-	int i = 0, dot = 0;
+	int i = 0, dot = 0, k = 0, j;
 	int value, col, row;
 	Cell** loadBoard;
 	if (currentSudoku != NULL) {
@@ -744,8 +753,8 @@ void solve(char* path) {
 	blockWidth = col; /*m*/
 	N = blockWidth * blockHeight;
 	loadBoard = (Cell**)malloc(sizeof(Cell*)*(col*col*row*row));
-	for (int k = 0; k < (row*col); k++) {
-		for (int j = 0; j < (col*row); j++) {
+	for (k = 0; k < (row*col); k++) {
+		for (j = 0; j < (col*row); j++) {
 			fscanf(fd, "%s", buff);
 			while (buff[i] != '\0') {
 				if (buff[i] != '.') {
@@ -778,10 +787,10 @@ void solve(char* path) {
 }
 
 void edit(char* path) {
-	char* fd;
+	FILE* fd;
 	char buff[256] = "\0";
 	char number[256] = "\0";
-	int i = 0, dot = 0;
+	int i = 0, dot = 0, k = 0,j;
 	int value, col, row;
 	Cell** loadBoard;
 	if (currentSudoku != NULL) {
@@ -808,8 +817,8 @@ void edit(char* path) {
 		blockWidth = col;
 		N = blockWidth * blockHeight;
 		loadBoard = (Cell**)malloc(sizeof(Cell*)*(col*col*row*row));
-		for (int k = 0; k < (row*col); k++) {
-			for (int j = 0; j < (col*row); j++) {
+		for (k = 0; k < (row*col); k++) {
+			for (j = 0; j < (col*row); j++) {
 				fscanf(fd, "%s", buff);
 				while (buff[i] != '\0') {
 					if (buff[i] != '.') {
@@ -844,8 +853,9 @@ void edit(char* path) {
 }
 
 clearBoard(Cell** sudoku) {
-	for (int i = 0; i < N; i++) {
-		for (int j = 0; j < N; j++) {
+	int i = 0, j = 0;
+	for (i = 0; i < N; i++) {
+		for (j = 0; j < N; j++) {
 			sudoku[i*N + j]->empty = 0;
 			sudoku[i*N + j]->value = 0;
 		}
@@ -853,7 +863,7 @@ clearBoard(Cell** sudoku) {
 }
 
 generate(int x, int y) {
-	int i, row, col, val, ret, countNum = 0, iter = 0;
+	int i, row, col, val, ret, countNum = 0, iter = 0, j, k = 0;
 	int startRow, startCol;
 	int numOfEmptyCells = checkNumOfEmptyCells(currentSudoku);
 	if (numOfEmptyCells != 0) {
@@ -869,7 +879,7 @@ generate(int x, int y) {
 				col = rand() % N;
 			}
 			countNum = 0;
-			for (int j = 1; j <= N; j++) {
+			for (j = 1; j <= N; j++) {
 				if (isRowValidGame(currentSudoku, row, col, j) && isColValidGame(currentSudoku, row, col, j) && isBlockValidGame(currentSudoku, startRow, startCol, row, col, j)) {
 					countNum++;
 				}
@@ -901,7 +911,7 @@ generate(int x, int y) {
 		clearBoard(currentSudoku);
 		return;
 	}
-	for (int k = 0; k < y; k++) {
+	for (k = 0; k < y; k++) {
 		row = rand() % N;
 		col = rand() % N;
 		currentSudoku[row*N + col]->empty = 1;

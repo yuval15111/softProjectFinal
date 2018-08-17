@@ -318,9 +318,9 @@ int exBackTrac(Cell** sudoku) {
 	curCol = index[1];
 	curRow = index[0];
 	while (flag) {
-		if (index[0] == -1) {  // find solution for the sudoku
+		if (index[0] == -1) {  
 			solutionCounter++;
-			popped = pop(&root); // if we got to the first cell in board
+			popped = pop(&root); 
 			if (root->col == -1) {
 				flag = 0; 
 				break;
@@ -334,24 +334,23 @@ int exBackTrac(Cell** sudoku) {
 			curRow = popped[0];
 		}
 
-		// find the next value (value+1) for the curr cell. 
+		/* find the next value (value+1) for the curr cell. */
 		nextVal = findNextVal(sudoku, curRow, curCol, sudoku[curRow*N + curCol]->value);
-		if (nextVal == -1) { //if there is not valid number
+		if (nextVal == -1) { /*if there is not valid number*/
 			popped = peek(root);
-			if (popped[0] == curRow && popped[1] == curCol) { // check if the cell is in the stack, means that we need to popped because there is no a valid number for this cell
+			if (popped[0] == curRow && popped[1] == curCol) { /* check if the cell is in the stack, means that we need to popped because there is no a valid number for this cell*/
 				popped = pop(&root);
 				if (root->col == -1) {
 					flag = 0;
 					break;
 				}
-				// initialize the cell to be 0
+				/* initialize the cell to be 0 */
 				sudoku[popped[0]*N + popped[1]]->value = 0;
 				sudoku[popped[0]*N + popped[1]]->empty = 0;
-				//index[0] = popped[0];
-				//index[1] = popped[1];
+
 				popped = peek(root);
 			}
-			// we stepBack to the prev cell and we will find for this cell the next valid number (if there is)
+			/* we stepBack to the prev cell and we will find for this cell the next valid number (if there is)*/
 			curRow = popped[0];
 			curCol = popped[1];
 			continue;

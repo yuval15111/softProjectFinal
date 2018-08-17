@@ -282,10 +282,11 @@ int* peek(stackNode* root) {
 }
 
 void findNextEmptyCell2(Cell** sudoku, int row, int col, int* index) {
+	int i, j;
 	index[0] = -1;
 	index[1] = -1;
-	for (int i=row; i < N; i++) {
-		for (int j=0; j < N; j++) {
+	for (i=row; i < N; i++) {
+		for (j=0; j < N; j++) {
 			if (sudoku[i*N + j]->empty == 0 && sudoku[i*N + j]->fixed == 0) {
 				if ((i == row && j > col) || (i > row)) {
 					index[0] = i;

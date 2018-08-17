@@ -872,6 +872,8 @@ clearBoard(Cell** sudoku) {
 	}
 }
 
+/*should check the result!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
+
 generate(int x, int y) {
 	int i, row, col, val, ret, countNum = 0, iter = 0, j, k = 0;
 	int startRow, startCol;

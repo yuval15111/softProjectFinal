@@ -183,6 +183,7 @@ int ILPSolver() {
 		return exitILP(&env, &model, flag, optimStat, sol, ThreeDMatrixSize);
 	}
 	printf("after GRBloadenv");
+
 	flag = GRBsetintparam(env, GRB_INT_PAR_LOGTOCONSOLE, 0);
 	if (flag) {
 		freeAll(lb, val, verType, index);

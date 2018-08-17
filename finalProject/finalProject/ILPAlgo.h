@@ -25,7 +25,9 @@ int oneValPerBlockCon(GRBmodel model, int index, double val);
 int oneValPerRowCon(GRBmodel model, int index, double val);
 
 int oneValPerColCon(GRBmodel model, int index, double val);
+
 */
+
 int ILPSolver();
 
 #endif /*ILPAlgo_H_*/

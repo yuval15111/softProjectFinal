@@ -94,7 +94,7 @@ char* getCommand() {
 		}
 		else if ((check = strcmp(newType, "generate")) == 0) {
 			if (mode == 2) {
-				while (newType != NULL && j < 4) {
+				while (newType != NULL && j < 3) {
 					newType = strtok(NULL, " \t\r\n");
 					for (i = 0; i < (int)strlen(newType); i++) {
 						numOfEmptyCells = checkNumOfEmptyCells(currentSudoku);

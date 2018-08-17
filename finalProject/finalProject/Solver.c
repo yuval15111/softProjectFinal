@@ -116,12 +116,13 @@ int exBackTrac(Cell** sudoku) {
 					flag = 0;
 					break;
 				}
+
 				/* initialize the cell to be 0 */
 				sudoku[popped[0]*N + popped[1]]->value = 0;
 				sudoku[popped[0]*N + popped[1]]->empty = 0;
-
 				popped = peek(root);
 			}
+
 			/* we stepBack to the prev cell and we will find for this cell the next valid number (if there is)*/
 			curRow = popped[0];
 			curCol = popped[1];

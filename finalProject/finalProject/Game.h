@@ -294,6 +294,8 @@ void playGame();
 
 void num_solutions(Cell ** sudoku);
 
+Cell** generateSudokuGame();
+
 
 #endif /*GAME_H_*/
 

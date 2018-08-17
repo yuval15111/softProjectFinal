@@ -3,6 +3,7 @@
 #include <string.h>
 #include "Game.h"
 
+
 #include "gurobi_c.h"
 
 extern Cell** currentSudoku;
@@ -12,7 +13,7 @@ extern int blockWidth, blockHeight, N;
 Cell** generateSudoku() {
 	int i, j;
 	Cell** sudoku = (Cell**)malloc(sizeof(Cell*)*N*N);
-	if (sudoku == NULL) { 
+	if (sudoku == NULL) {
 		printf("Error: generateSudoku has failed\n");
 		exit(0);
 	}
@@ -95,7 +96,7 @@ int oneValPerCellCon(GRBmodel** model, int* index, double* val) {
 
 int oneValPerColCon(GRBmodel** model, int* index, double* val) {
 	/* constraint : each value is used exactly once in each column */
-		int i, j, k, flag = 0;
+	int i, j, k, flag = 0;
 	for (k = 0; k < N; k++) {
 		for (i = 0; i < N; i++) {
 			for (j = 0; j < N; j++) {
@@ -113,7 +114,7 @@ int oneValPerColCon(GRBmodel** model, int* index, double* val) {
 
 int oneValPerRowCon(GRBmodel** model, int* index, double* val) {
 	/* constraint : each value is used exactly once in each row */
-		int i, j, k, flag = 0;
+	int i, j, k, flag = 0;
 	for (k = 0; k < N; k++) {
 		for (j = 0; j < N; j++) {
 			for (i = 0; i < N; i++) {
@@ -131,7 +132,7 @@ int oneValPerRowCon(GRBmodel** model, int* index, double* val) {
 
 int oneValPerBlockCon(GRBmodel** model, int* index, double* val) {
 	/* constraint : each value is used exactly once in each block */
-		int i, j, e, k, l;
+	int i, j, e, k, l;
 	int count, flag = 0;
 	for (e = 0; e < N; e++) {
 		for (k = 0; k < blockHeight; k++) {
@@ -157,7 +158,7 @@ int oneValPerBlockCon(GRBmodel** model, int* index, double* val) {
 void addVaribles(double *lb, char *verType) {
 	/* if a cell value equals k->insert 1 at this index in lb matrix
 	else->insert 0 at this index in lb matrix */
-		int i, j, k;
+	int i, j, k;
 	for (i = 0; i < N; i++) {
 		for (j = 0; j < N; j++) {
 			for (k = 0; k < N; k++) {
@@ -175,9 +176,9 @@ void addVaribles(double *lb, char *verType) {
 
 int ILPSolver() {
 	/* try to solve the currentSudoku using ILP.
-		* if the board is solvable it writes the solution to the tempBoard and return 1,
-		*if the board is unsolvable it doesnt change the tempBoard and return 2,
-		if error occur return -1; */
+	* if the board is solvable it writes the solution to the tempBoard and return 1,
+	*if the board is unsolvable it doesnt change the tempBoard and return 2,
+	if error occur return -1; */
 	GRBmodel* model = NULL;
 	GRBenv* env = NULL;
 	int ThreeDMatrixSize, optimStat, flag = 0, *index;
@@ -242,6 +243,7 @@ int ILPSolver() {
 
 
 /*
+
 int ILPSolver() {
 	printf("bla: %d", N);
 	return -1;

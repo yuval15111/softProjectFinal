@@ -11,6 +11,7 @@ int undoBit; /*when we did undo to the first cell in the undo_redo list -> undoB
 int autoFillBit = 0; /*autoFillBit = 1 when the autofill command succeeds*/
 int mode = 0; /*1 - solve mode and 2 - edit mode and 0 - init*/
 int saveGlob = 0; /*when we do save command -> 1*/
+int generateGlob = 0; /*when we do generate -> 1*/
 		
 /*
 A linked list for all the play moves
@@ -375,9 +376,8 @@ int checkNumOfEmptyCells(Cell** sudoku){
 				count++;
 			}
 		}
-
-		return count;
 	}
+	return count;
 }
 
 void set(Cell** sudoku, int row, int col, int val, char* oldCommand) {
@@ -409,7 +409,7 @@ void set(Cell** sudoku, int row, int col, int val, char* oldCommand) {
 				erroneousFixAdd(row, col, val);
 			}
 		}
-		if (autoFillBit == 0) {
+		if (autoFillBit == 0 && generateGlob == 0) {
 			printSudoku(sudoku);
 		}
 		if (undo_redo.len == 0) {
@@ -780,12 +780,28 @@ void solve(char* path) {
 	checkErroneous(currentSudoku);
 }
 
+/*This func init the board for the default edit (edit without arguments)*/
+Cell** generateSudokuGame() {
+	int i, j;
+	N = 9;
+	Cell** sudoku = (Cell**)malloc(sizeof(Cell*)*N*N);
+	if (sudoku == NULL) {
+		printf("Error: generateSudoku has failed\n");
+		exit(0);
+	}
+	for (i = 0; i < N; i++) {
+		for (j = 0; j < N; j++) {
+			sudoku[i* N + j] = createCell(0); /*creating an empty sudoku*/
+		}
+	}
+	return sudoku;
+}
+
 void edit(char* path) {
 	FILE* fd;
 	char buff[256] = "\0";
 	char number[256] = "\0";
-	int i = 0, dot = 0, k = 0,j;
-	int value, col, row;
+	int i = 0, dot = 0, k = 0,j, value, col, row;
 	Cell** loadBoard;
 	if (currentSudoku != NULL) {
 		freeList(undo_redo.head);
@@ -793,7 +809,7 @@ void edit(char* path) {
 		freeSudoku(solvedSudoku);/*maybe delete????????????????????????????*/
 	}
 	if (*path == '\0') {
-		loadBoard = generateSudoku();
+		loadBoard = generateSudokuGame();
 		blockHeight = 3;
 		blockWidth = 3;
 		N = blockWidth * blockHeight;
@@ -860,7 +876,7 @@ generate(int x, int y) {
 	int i, row, col, val, ret, countNum = 0, iter = 0, j, k = 0;
 	int startRow, startCol;
 	int numOfEmptyCells = checkNumOfEmptyCells(currentSudoku);
-	if (numOfEmptyCells != 0) {
+	if (numOfEmptyCells != (N*N)) {
 		printf("Error: board is not empty\n");
 		return;
 	}
@@ -868,11 +884,13 @@ generate(int x, int y) {
 		for (i = 0; i < x; i++) {
 			row = rand() % N;
 			col = rand() % N;
-			while (currentSudoku[row*N + col]->empty = 1) {
+			while (currentSudoku[row*N + col]->empty == 1) {
 				row = rand() % N;
 				col = rand() % N;
 			}
 			countNum = 0;
+			startRow = row - row % blockHeight;
+			startCol = col - col % blockWidth;
 			for (j = 1; j <= N; j++) {
 				if (isRowValidGame(currentSudoku, row, col, j) && isColValidGame(currentSudoku, row, col, j) && isBlockValidGame(currentSudoku, startRow, startCol, row, col, j)) {
 					countNum++;
@@ -889,7 +907,9 @@ generate(int x, int y) {
 				while (!(isRowValidGame(currentSudoku, row, col, val) && isColValidGame(currentSudoku, row, col, val) && isBlockValidGame(currentSudoku, startRow, startCol, row, col, val))) {
 					val = rand() % N;
 				}
+				generateGlob = 1;
 				set(currentSudoku, row, col, val, NULL); /* should treat the undo_redo list*/
+				generateGlob = 0;
 			}
 		ret = ILPSolver();
 		if (ret != 1) {
@@ -959,7 +979,7 @@ void doCommand(char* command) {
 		undo();
 	}
 	else if (command[0] == 'c') { /*generate*/
-		generate(command[1], command[2]);
+		generate(command[1] - '0', command[2] - '0');
 	}
 	free(command);
 }

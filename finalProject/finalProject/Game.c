@@ -9,7 +9,7 @@
 int markError = 1; /*by default = 1*/
 int undoBit; /*when we did undo to the first cell in the undo_redo list -> undoBit=1*/
 int autoFillBit = 0; /*autoFillBit = 1 when the autofill command succeeds*/
-int mode = 2; /*1 - solve mode and 2 - edit mode and 0 - init*/
+int mode = 0; /*1 - solve mode and 2 - edit mode and 0 - init*/
 int saveGlob = 0; /*when we do save command -> 1*/
 		
 /*
@@ -435,7 +435,7 @@ void set(Cell** sudoku, int row, int col, int val, char* oldCommand) {
 			valid = validate(sudoku);
 			if (valid == 1) {
 				printf("Puzzle solved successfully\n");
-				mode = 2;
+				mode = 0;
 				return;
 			}
 			else printf("Puzzle solution erroneous\n");
@@ -678,8 +678,8 @@ void autoFill(Cell** sudoku) {
 	}
 	for (g = 0; g < counter; g=g+3) {
 		autoFillBit = 1;
+		printf("Cell <%d,%d> set to %d\n", arr[g + 1] + 1, arr[g] + 1, arr[g + 2]);
 		set(sudoku, arr[g], arr[g + 1], arr[g + 2], NULL);
-		printf("Cell <%d,%d> set to %d\n", arr[g+1]+1, arr[g]+1, arr[g+2]);
 		undo_redo.tail->autoCells = (g/3)+1;
 	}
 	printSudoku(sudoku);

@@ -176,14 +176,6 @@ the value of the cell in solvedSudoku[row][column] that saved the solution of th
 */
 void hint(int row, int col);
 
-/*#####################delete?############################
-This function checks if the board is full:
-@return
-True - if the board is full (and correctly)
-Flase - the board isnt full
-*/
-bool isGameOver(Cell** sudoku);
-
 /*
 This function handles the erroneous cells in a given row
 it gets a row, col and a value:
@@ -272,20 +264,7 @@ void set(Cell** sudoku, int row, int col, int val, char* oldCommand);
 void undo();
 
 /*
-This function update the address of solvedSudoku that saved the solution of current sudoku in game.c module
-boardGeneration is the address that we got from puzzleGeneration function (solver module).
-*/
-void getSolvedSudoku(Cell** boardGeneration);
-
-/*####################################### delete delete delete ####################################
-This function update the address of currentSudoku that saved the board with hints in game.c module
-sudokuWithHints is the address that we got from puzzleGeneration function (solver module).
-*/
-void getSudokuWithHints(Cell** sudokuWithHints);
-
-/*
 This function checks which command we need to execute and calls his function accordingly.
-
 */
 void doCommand(char* command);
 /*
@@ -299,12 +278,6 @@ This function free all the sudoku boards, say goodbye to the user and exit
 */
 void exitGame();
 
-/*########################## maybe change to reset - otherwise delete #####################
-This function free all the sudoku boards and call again to puzzleGeneration with the
-function initNumberOfHints() (in order to get the number of hints that the user wants for his
-new game.
-then, calls playgame func.
-*/
 void reset();
 
 void solve(char* path);

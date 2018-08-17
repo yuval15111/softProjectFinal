@@ -9,9 +9,22 @@ extern Cell** currentSudoku;
 extern Cell** solvedSudoku;
 extern int blockWidth, blockHeight, N;
 
+Cell** generateSudoku() {
+	int i, j;
+	Cell** sudoku = (Cell**)malloc(sizeof(Cell*)*N*N);
+	if (sudoku == NULL) { 
+		printf("Error: generateSudoku has failed\n");
+		exit(0);
+	}
+	for (i = 0; i < N; i++) {
+		for (j = 0; j < N; j++) {
+			sudoku[i* N + j] = createCell(0); /*creating an empty sudoku*/
+		}
+	}
+	return sudoku;
+}
 
 void freeAll(double* lb, double* val, char* verType, int* index) {
-	printf("freeAll");
 	free(lb);
 	free(val);
 	free(verType);
@@ -20,6 +33,7 @@ void freeAll(double* lb, double* val, char* verType, int* index) {
 
 void writeSolToBoard(double* sol) {
 	int i, j, k;
+	solvedSudoku = generateSudoku();
 	for (i = 0; i < N; i++) {
 		for (j = 0; j < N; j++) {
 			for (k = 0; k < N; k++) {
@@ -34,7 +48,6 @@ void writeSolToBoard(double* sol) {
 
 int exitILP(GRBenv** env, GRBmodel** model, int flag, int optimStat, double* sol, int ThreeDMatrixSize) {
 	int solAns = 0;
-	printf("exitILP");
 	if (flag == 0 && optimStat == GRB_OPTIMAL) { /* the board is solveable */
 		solAns = GRBgetdblattrarray(*model, GRB_DBL_ATTR_X, 0, ThreeDMatrixSize, sol);
 		if (solAns == 0) { /* retrive the solution successfully */
@@ -176,72 +189,54 @@ int ILPSolver() {
 	index = (int*)malloc(N * sizeof(int));
 	val = (double*)malloc(N * sizeof(double));
 	sol = (double*)malloc(ThreeDMatrixSize * sizeof(double));
-	printf("after malloc");
 	addVaribles(lb, verType);
 	flag = GRBloadenv(&env, "ILP.log");
 	if (flag) {
 		freeAll(lb, val, verType, index);
 		return exitILP(&env, &model, flag, optimStat, sol, ThreeDMatrixSize);
 	}
-	printf("after GRBloadenv");
-
 	flag = GRBsetintparam(env, GRB_INT_PAR_LOGTOCONSOLE, 0);
 	if (flag) {
 		freeAll(lb, val, verType, index);
 		return exitILP(&env, &model, flag, optimStat, sol, ThreeDMatrixSize);
 	}
-	printf("after GRBsetintparam");
 	flag = GRBnewmodel(env, &model, "ILP", ThreeDMatrixSize, NULL, lb, NULL, verType, NULL);
 	if (flag) {
 		freeAll(lb, val, verType, index);
 		return exitILP(&env, &model, flag, optimStat, sol, ThreeDMatrixSize);
 	}
-	printf("after GRBnewmodel");
 	flag = oneValPerCellCon(&model, index, val);
 	if (flag) {
 		freeAll(lb, val, verType, index);
 		return exitILP(&env, &model, flag, optimStat, sol, ThreeDMatrixSize);
 	}
-	printf("after oneValPerCellCon");
-
 	flag = oneValPerColCon(&model, index, val);
 	if (flag) {
 		freeAll(lb, val, verType, index);
 		return exitILP(&env, &model, flag, optimStat, sol, ThreeDMatrixSize);
 	}
-	printf("after oneValPerColCon");
-
 	flag = oneValPerRowCon(&model, index, val);
 	if (flag) {
 		freeAll(lb, val, verType, index);
 		return exitILP(&env, &model, flag, optimStat, sol, ThreeDMatrixSize);
 	}
-	printf("after oneValPerRowCon");
-
 	flag = oneValPerBlockCon(&model, index, val);
 	if (flag) {
 		freeAll(lb, val, verType, index);
 		return exitILP(&env, &model, flag, optimStat, sol, ThreeDMatrixSize);
 	}
-	printf("after oneValPerBlockCon");
-
 	flag = GRBoptimize(model);
 	if (flag) {
 		freeAll(lb, val, verType, index);
 		return exitILP(&env, &model, flag, optimStat, sol, ThreeDMatrixSize);
 	}
-	printf("after GRBoptimize");
-
 	flag = GRBgetintattr(model, GRB_INT_ATTR_STATUS, &optimStat);
 	if (flag) {
 		freeAll(lb, val, verType, index);
 		return exitILP(&env, &model, flag, optimStat, sol, ThreeDMatrixSize);
 	}
-	printf("after GRBgetintattr");
-
 	freeAll(lb, val, verType, index);
 	return exitILP(&env, &model, flag, optimStat, sol, ThreeDMatrixSize);
-	printf("the end");
 
 }
 
@@ -250,4 +245,4 @@ int ILPSolver() {
 int ILPSolver() {
 	printf("bla: %d", N);
 	return -1;
-}*
+}*/

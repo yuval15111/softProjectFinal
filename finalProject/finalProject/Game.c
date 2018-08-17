@@ -10,12 +10,12 @@ int markError = 1; /*by default = 1*/
 int undoBit; /*when we did undo to the first cell in the undo_redo list -> undoBit=1*/
 int autoFillBit = 0; /*autoFillBit = 1 when the autofill command succeeds*/
 int mode = 2; /*1 - solve mode and 2 - edit mode and 0 - init*/
+int saveGlob = 0; /*when we do save command -> 1*/
 		
 /*
 A linked list for all the play moves
 */
 linkedList undo_redo;
-
 
 /*
 solvedSudoku is the solution of the board from the last time the user checked the validaty of the board
@@ -233,11 +233,15 @@ int validate(Cell** currentSudoku) { /*return 0 - erroneous board, 1 - solvable,
 	if (ret == 1) {
 
 		/* board is solveable*/
-		printf("Validation passes: board is solvable/n");
+		if (saveGlob != 1) {
+			printf("Validation passes: board is solvable/n");
+		}
 		return 1;
 	}
 	else if (ret == 2) {
-		printf("Validation failed: board is unsolvable/n");
+		if (saveGlob != 1) {
+			printf("Validation failed: board is unsolvable/n");
+		}
 		return 0;
 	}
 	return 0;
@@ -266,18 +270,6 @@ void hint(int row, int col) {
 	else if (ret == 1) {
 		printf("Hint: set cell to %d\n", solvedSudoku[row*N + col]->value);
 	}
-}
-
-bool isGameOver(Cell** sudoku) {/*############################## delete ###########################*/
-	int i, j;
-	for (i = 0; i < N; i++) {
-		for (j = 0; j < N; j++) {
-			if (sudoku[i*N + j]->empty == 0) {
-				return false;
-			}
-		}
-	}
-	return true;
 }
 
 void checkErrorRow(int row, int col, int val) {
@@ -441,14 +433,12 @@ void set(Cell** sudoku, int row, int col, int val, char* oldCommand) {
 		}
 		if (mode == 1 && checkNumOfEmptyCells(sudoku) == 0) { /*Last cell was filled*/
 			valid = validate(sudoku);
-			if (valid == 0) {
-				printf("Puzzle solution erroneous\n");
-			}
-			else if (valid == 1) {
+			if (valid == 1) {
 				printf("Puzzle solved successfully\n");
 				mode = 2;
 				return;
 			}
+			else printf("Puzzle solution erroneous\n");
 		}
 	}
 }
@@ -618,10 +608,13 @@ void save(Cell** sudoku, char* path) { /*we should check if it is possible to sa
 			printf("Error: board contains errorneus values\n");
 			return;
 		}
-/*		if (validate(currentSudoku) == 2) { shouldnt use validate because of the printf in validate!!!!!!!!!!!!!!
+		saveGlob = 1;
+		if (validate(currentSudoku) == 2) {
 			printf("Error: board validation failed\n");
+			saveGlob = 0;
 			return;
-		}*/
+		}
+		saveGlob = 0;
 	}
 	FILE* fd = fopen(path, "w");
 	if (fd == NULL) {
@@ -969,10 +962,6 @@ void doCommand(char* command) {
 		generate(command[1], command[2]);
 	}
 	free(command);
-}
-
-void getSolvedSudoku(Cell** boardGeneration) {
-	solvedSudoku = boardGeneration;
 }
 
 void getSudokuWithHints(Cell** sudokuWithHints) {

@@ -7,27 +7,6 @@
 extern Cell** currentSudoku;
 extern mode;
 
-int initNumberOfHints() {/*#######################################3delete###########################*/
-	char hints[20];
-	int flag = 1;
-	int convertHintsToInt = -1;
-	while (flag) {
-		printf("Please enter the number of cells to fill [0-80]:\n");
-		if (fgets(hints, 1024, stdin) == NULL) {
-			exitGame();
-		}
-		convertHintsToInt = atoi(hints);
-		if (hints[0] == '0') {
-			return 0;
-		}
-		if (convertHintsToInt > 80 || convertHintsToInt <= 0) {
-			printf("Error: invalid number of cells to fill (should be between 0 and 80)\n");
-		}
-		else flag = 0;
-	}
-	return convertHintsToInt;
-}
-
 void printInvalid() {
 	printf("ERROR: invalid command\n");
 }
@@ -51,7 +30,6 @@ char* getCommand() {
 			exitGame();
 		}
 		newType = strtok(command, " \t\r\n");
-		printf("newtype: %s", newType);
 		if ((check = strcmp(newType, "solve")) == 0) {
 			idCommand = 1;
 			while ((newType = strtok(NULL, "\n")) != NULL) {
@@ -151,7 +129,6 @@ char* getCommand() {
 			
 		}
 		else if ((check = strcmp(newType, "hint")) == 0) {
-			printf("mode=%d", mode);
 			if (mode == 1) {
 				while (newType != NULL && j < 3) {
 					newType = strtok(NULL, " \t\r\n");
@@ -173,14 +150,12 @@ char* getCommand() {
 				}
 				values[0] = '2';
 				flag = 0;
-				printf("after flag=0");
 			}
 			else {
 				printInvalid();
 			}
 		}
 		else if ((check = strcmp(newType, "validate")) == 0) {
-			printf("before validate");
 			if (mode == 1 || mode == 2) {
 				printf("before values[0]");
 				values[0] = '3';

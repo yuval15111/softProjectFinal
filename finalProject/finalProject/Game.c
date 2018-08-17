@@ -179,6 +179,7 @@ void printSudoku(Cell** sudoku) {
 		}
 		printSeparator();
 	}
+	ILPSolver();
 }
 
 bool isRowValidGame(Cell** sudoku, int row, int col, int num) {
@@ -220,29 +221,28 @@ bool isBlockValidGame(Cell** sudoku, int startRow, int startCol, int row, int co
 }
 
 int validate(Cell** currentSudoku) { /*return 0 - erroneous board, 1 - solvable, 2 - unsolvable*/
-	Cell** newSolvedSudoku;
-	newSolvedSudoku = determenisticBacktrack(currentSudoku);
+	int ret = 0;
 	if (isBoardErrorneus(currentSudoku))
 	{
 		printf("Error: board contains erroneous values\n");
 		return 0;
 	}
-	else { // board doesnt have an error
-		if (newSolvedSudoku == NULL) {
-			printf("Validation failed: board is unsolvable\n");
-			return 2;
-		}
-		else {
-			freeSudoku(solvedSudoku); /*################## check###################*/
-			solvedSudoku = newSolvedSudoku;
-			printf("Validation passed: board is solvable\n");
-			return 1;
-		}
+	ret = ILPSolver();
+	if (ret == 1) {
+
+		// board is solveable
+		printf("Validation passes: board is solvable/n");
+		return 1;
+	}
+	else if (ret == 2) {
+		printf("Validation failed: board is unsolvable/n");
+		return 0;
 	}
 	return 0;
 }
 
 void hint(int row, int col) {
+	int ret = 0;
 	if (isBoardErrorneus) {
 		printf("Error: board contains erroneous values\n");
 		return;
@@ -255,7 +255,14 @@ void hint(int row, int col) {
 		printf("Error: cell already contains a value\n");
 		return;
 	}
-	/*run ILP algo and check if there is a solution the the current board back to point h in PDF ########################*/
+	ret = ILPSolver();
+	if (ret == 2) {
+		printf("Error: board is unsolvable\n");
+		return;
+	}
+	else if (ret == 1) {
+		printf("Hint: set cell to %d\n", solvedSudoku[row*N + col]);
+	}
 }
 
 bool isGameOver(Cell** sudoku) {/*############################## delete ###########################*/
@@ -836,6 +843,73 @@ void edit(char* path) {
 	checkErroneous(currentSudoku);
 }
 
+clearBoard(Cell** sudoku) {
+	for (int i = 0; i < N; i++) {
+		for (int j = 0; j < N; j++) {
+			sudoku[i*N + j]->empty = 0;
+			sudoku[i*N + j]->value = 0;
+		}
+	}
+}
+
+generate(int x, int y) {
+	int i, row, col, val, ret, countNum = 0, iter = 0;
+	int startRow, startCol;
+	int numOfEmptyCells = checkNumOfEmptyCells(currentSudoku);
+	if (numOfEmptyCells != 0) {
+		printf("Error: board is not empty\n");
+		return;
+	}
+	while (iter <= 1000){
+		for (i = 0; i < x; i++) {
+			row = rand() % N;
+			col = rand() % N;
+			while (currentSudoku[row*N + col]->empty = 1) {
+				row = rand() % N;
+				col = rand() % N;
+			}
+			countNum = 0;
+			for (int j = 1; j <= N; j++) {
+				if (isRowValidGame(currentSudoku, row, col, j) && isColValidGame(currentSudoku, row, col, j) && isBlockValidGame(currentSudoku, startRow, startCol, row, col, j)) {
+					countNum++;
+				}
+			}
+				if (countNum == 0) {
+					iter++;
+					countNum = 0;
+					break;
+				}
+				val = rand() % N;
+				startRow = row - row % blockHeight;
+				startCol = col - col % blockWidth;
+				while (!(isRowValidGame(currentSudoku, row, col, val) && isColValidGame(currentSudoku, row, col, val) && isBlockValidGame(currentSudoku, startRow, startCol, row, col, val))) {
+					val = rand() % N;
+				}
+				set(currentSudoku, row, col, val, NULL); /* should treat the undo_redo list*/
+			}
+		ret = ILPSolver();
+		if (ret != 1) {
+			iter++;
+			clearBoard(currentSudoku);
+		}
+		else {
+			break;
+		}
+	}
+	if (iter > 1000) {
+		printf("Error: puzzle generator failed\n");
+		clearBoard(currentSudoku);
+		return;
+	}
+	for (int k = 0; k < y; k++) {
+		row = rand() % N;
+		col = rand() % N;
+		currentSudoku[row*N + col]->empty = 1;
+		currentSudoku[row*N + col]->value = solvedSudoku[row*N + col]->value;
+	}
+	return;
+}
+
 void doCommand(char* command) {
 	if (idCommand == 1) {
 		solve(command);
@@ -855,8 +929,7 @@ void doCommand(char* command) {
 	else if (command[0] == '3') {
 		validate(currentSudoku);
 	}
-
-	else if (command[0] == '4') {/*should be reset!!!!!!!!!!!!!!!!!!!!!!!!*/
+	else if (command[0] == '4') {
 		reset();
 	}
 	else if (command[0] == '5') {
@@ -882,7 +955,7 @@ void doCommand(char* command) {
 		undo();
 	}
 	else if (command[0] == 'c') { /*generate*/
-
+		generate(command[1], command[2]);
 	}
 	free(command);
 }

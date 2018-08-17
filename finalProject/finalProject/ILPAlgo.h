@@ -18,4 +18,14 @@ This function
 */
 int exitILP(GRBenv** env, GRBmodel** model, int flag, int optimStat, double* sol, int ThreeDMatrixSize);
 
+void addVaribles(double *lb, char *verType);
+
+int oneValPerBlockCon(GRBmodel model, int index, double val);
+
+int oneValPerRowCon(GRBmodel model, int index, double val);
+
+int oneValPerColCon(GRBmodel model, int index, double val);
+
+int ILPSolver();
+
 #endif /*ILPAlgo_H_*/

@@ -4,6 +4,7 @@
 #include<ctype.h>
 #include "Game.h"
 
+extern Cell** currentSudoku;
 
 int initNumberOfHints() {/*#######################################3delete###########################*/
 	char hints[20];
@@ -116,6 +117,7 @@ char* getCommand() {
 				while (newType != NULL && j < 4) {
 					newType = strtok(NULL, " \t\r\n");
 					for (i = 0; i < (int)strlen(newType); i++) {
+						numOfEmptyCells = checkNumOfEmptyCells(currentSudoku);
 						if ((isdigit((int)newType[i])) == 0) {
 							printf("Error: value not in range 1-%d\n", numOfEmptyCells);
 							return values;
@@ -146,9 +148,9 @@ char* getCommand() {
 			else printInvalid();
 			
 		}
-		else if ((check = strcmp(newType, "set")) == 0) {
+		else if ((check = strcmp(newType, "hint")) == 0) {
 			if (mode == 1) {
-				while (newType != NULL && j < 4) {
+				while (newType != NULL && j < 3) {
 					newType = strtok(NULL, " \t\r\n");
 					for (i = 0; i < (int)strlen(newType); i++) {
 						if ((isdigit((int)newType[i])) == 0) {

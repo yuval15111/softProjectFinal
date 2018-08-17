@@ -1,10 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "Game.h"
 #include "gurobi_c.h"
 
-extern currentSudoku;
-extern solvedSudoku;
+extern Cell** currentSudoku;
+extern Cell** solvedSudoku;
 extern blockWidth, blockHeight, N;
 
 
@@ -21,7 +22,7 @@ void writeSolToBoard(double* sol) {
 		for (j = 0; j < N; j++) {
 			for (k = 0; k < N; k++) {
 				if (sol[i * N * N + j * N + k] == 1) {
-					solvedSudoku[i*N + j].value = k + 1;
+					solvedSudoku[i*N + j]->value = k + 1;
 				}
 			}
 		}
@@ -56,9 +57,10 @@ int exitILP(GRBenv** env, GRBmodel** model, int flag, int optimStat, double* sol
 	}
 }
 
+
 int oneValPerCellCon(GRBmodel model, int index, double val) {
-	$ constraint : each cell have exactly one value @
-		int i, j, k, flag = 0;
+	$ each cell have exactly one value @
+	int i, j, k, flag = 0;
 	for (i = 0; i < N; i++) {
 		for (j = 0; j < N; j++) {
 			for (k = 0; k < N; k++) {
@@ -142,7 +144,7 @@ void addVaribles(double *lb, char *verType) {
 	for (i = 0; i < N; i++) {
 		for (j = 0; j < N; j++) {
 			for (k = 0; k < N; k++) {
-				if (currentSudoku[i*N + j].value == k + 1) {
+				if (currentSudoku[i*N + j]->value == k + 1) {
 					lb[i * N * N + j * N + k] = 1;
 				}
 				else {
@@ -158,9 +160,9 @@ int ILPSolver() {
 	$ try to solve the currentSudoku using ILP.
 		* if the board is solvable it writes the solution to the tempBoard and return 1,
 		*if the board is unsolvable it doesnt change the tempBoard and return 2,
-		if flag occur return -1; @
+		if error occur return -1; @
 
-			GRBmodel* model = NULL;
+	GRBmodel* model = NULL;
 	GRBenv* env = NULL;
 	int ThreeDMatrixSize, optimStat, flag = 0, *index;
 	char* verType;
@@ -222,6 +224,8 @@ int ILPSolver() {
 }
 
 
+/*
 int ILPSolver() {
+	printf("bla: %d", N);
 	return -1;
-}
+}*/

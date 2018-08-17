@@ -1,13 +1,12 @@
 #include<time.h>
 #include<stdio.h>
-#include"Solver.h"
+#include"Game.h"
 #include <stdlib.h>
-#include "Parser.h"
 
 int main(int argc, char* argv[]) {
 	int seed;
 	if (argc == 2) {
-		seed = atoi(argv[1]);
+		seed = time(NULL);
 		srand(seed);
 		printf("Sudoku\n------\n");
 

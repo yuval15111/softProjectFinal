@@ -28,6 +28,7 @@ void writeSolToBoard(double* sol) {
 			}
 		}
 	}
+
 }
 
 int exitILP(GRBenv** env, GRBmodel** model, int flag, int optimStat, double* sol, int ThreeDMatrixSize) {

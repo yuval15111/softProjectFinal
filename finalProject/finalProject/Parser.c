@@ -51,6 +51,7 @@ char* getCommand() {
 			exitGame();
 		}
 		newType = strtok(command, " \t\r\n");
+		printf("newtype: %s", newType);
 		if ((check = strcmp(newType, "solve")) == 0) {
 			idCommand = 1;
 			while ((newType = strtok(NULL, "\n")) != NULL) {
@@ -179,7 +180,9 @@ char* getCommand() {
 			}
 		}
 		else if ((check = strcmp(newType, "validate")) == 0) {
+			printf("before validate");
 			if (mode == 1 || mode == 2) {
+				printf("before values[0]");
 				values[0] = '3';
 				flag = 0;
 			}

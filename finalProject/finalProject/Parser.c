@@ -150,6 +150,7 @@ char* getCommand() {
 			
 		}
 		else if ((check = strcmp(newType, "hint")) == 0) {
+			printf("mode=%d", mode);
 			if (mode == 1) {
 				while (newType != NULL && j < 3) {
 					newType = strtok(NULL, " \t\r\n");
@@ -171,6 +172,7 @@ char* getCommand() {
 				}
 				values[0] = '2';
 				flag = 0;
+				printf("after flag=0");
 			}
 			else {
 				printInvalid();

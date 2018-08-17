@@ -5,12 +5,9 @@
 
 int main(int argc, char* argv[]) {
 	int seed;
-	if (argc == 2) {
-		seed = time(NULL);
-		srand(seed);
-		printf("Sudoku\n------\n");
-
-		playGame();
-	}
+	seed = time(NULL);
+	srand(seed);
+	printf("Sudoku\n------\n");
+	playGame();
 	return 0;
 }

@@ -4,6 +4,7 @@
 #include "Solver.h"
 #include "Parser.h"
 #include "Game.h"
+#include "ILPAlgo.h"
 
 int markError = 1; /*by default = 1*/
 int undoBit; /*when we did undo to the first cell in the undo_redo list -> undoBit=1*/
@@ -181,7 +182,6 @@ void printSudoku(Cell** sudoku) {
 		}
 		printSeparator();
 	}
-	ILPSolver();
 }
 
 bool isRowValidGame(Cell** sudoku, int row, int col, int num) {
@@ -224,7 +224,7 @@ bool isBlockValidGame(Cell** sudoku, int startRow, int startCol, int row, int co
 
 int validate(Cell** currentSudoku) { /*return 0 - erroneous board, 1 - solvable, 2 - unsolvable*/
 	int ret = 0;
-	if (isBoardErrorneus(currentSudoku))
+	if (isBoardErrorneus(currentSudoku)==1)
 	{
 		printf("Error: board contains erroneous values\n");
 		return 0;
@@ -245,7 +245,7 @@ int validate(Cell** currentSudoku) { /*return 0 - erroneous board, 1 - solvable,
 
 void hint(int row, int col) {
 	int ret = 0;
-	if (isBoardErrorneus) {
+	if (isBoardErrorneus(currentSudoku)==1) {
 		printf("Error: board contains erroneous values\n");
 		return;
 	}
@@ -257,6 +257,7 @@ void hint(int row, int col) {
 		printf("Error: cell already contains a value\n");
 		return;
 	}
+	printf("before ILP");
 	ret = ILPSolver();
 	if (ret == 2) {
 		printf("Error: board is unsolvable\n");

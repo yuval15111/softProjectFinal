@@ -157,7 +157,6 @@ char* getCommand() {
 		}
 		else if ((check = strcmp(newType, "validate")) == 0) {
 			if (mode == 1 || mode == 2) {
-				printf("before values[0]");
 				values[0] = '3';
 				flag = 0;
 			}

@@ -233,13 +233,13 @@ int validate(Cell** currentSudoku) { /*return 0 - erroneous board, 1 - solvable,
 	ret = ILPSolver();
 	if (ret == 1) { /* board is solvable*/
 		if (saveGlob != 1) {
-			printf("Validation passes: board is solvable/n");
+			printf("Validation passes: board is solvable\n");
 		}
 		return 1;
 	}
 	else if (ret == 2) {
 		if (saveGlob != 1) {
-			printf("Validation failed: board is unsolvable/n");
+			printf("Validation failed: board is unsolvable\n");
 		}
 		return 2;
 	}
@@ -260,7 +260,6 @@ void hint(int row, int col) {
 		printf("Error: cell already contains a value\n");
 		return;
 	}
-	printf("before ILP");
 	ret = ILPSolver();
 	if (ret == 2) {
 		printf("Error: board is unsolvable\n");
@@ -864,7 +863,7 @@ void edit(char* path) {
 	checkErroneous(currentSudoku);
 }
 
-clearBoard(Cell** sudoku) {
+void clearBoard(Cell** sudoku) {
 	int i = 0, j = 0;
 	for (i = 0; i < N; i++) {
 		for (j = 0; j < N; j++) {
@@ -877,7 +876,7 @@ clearBoard(Cell** sudoku) {
 /*should check the result!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
 
 void generate(int x, int y) {
-	int i, row, col, val, ret, countNum = 0, iter = 0, j, k = 0;
+	int i, row, col, val, ret, countNum = 0, iter = 0, j, k = 0, flag = 0;
 	int startRow, startCol;
 	int numOfEmptyCells = checkNumOfEmptyCells(currentSudoku);
 	if (numOfEmptyCells != (N*N)) {
@@ -918,17 +917,18 @@ void generate(int x, int y) {
 		ret = ILPSolver();
 		if (ret != 1) {
 			iter++;
-			clearBoard(currentSudoku);
 		}
 		else {
 			break;
 		}
+		clearBoard(currentSudoku);
 	}
 	if (iter > 1000) {
 		printf("Error: puzzle generator failed\n");
 		clearBoard(currentSudoku);
 		return;
 	}
+	clearBoard(currentSudoku);
 	for (k = 0; k < y; k++) {
 		row = rand() % N;
 		col = rand() % N;
@@ -936,8 +936,17 @@ void generate(int x, int y) {
 			row = rand() % N;
 			col = rand() % N;
 		}
-		currentSudoku[row*N + col]->empty = 1;
-		currentSudoku[row*N + col]->value = solvedSudoku[row*N + col]->value;
+		if (currentSudoku[row*N + col]->empty == 0) {
+			flag = 1;
+		}
+		printf("row: %d and col: %d\n", row, col);
+		if (flag == 1) {
+			currentSudoku[row*N + col]->empty = 1;
+			currentSudoku[row*N + col]->value = solvedSudoku[row*N + col]->value;
+			printSudoku(currentSudoku);
+			printf("sudoku change value: %d\n", currentSudoku[row*N + col]->value);
+			flag = 0;
+		}
 	}
 	return;
 }

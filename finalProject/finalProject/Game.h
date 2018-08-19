@@ -383,7 +383,7 @@ void edit(char* path);
 This function gets a sudoku and clear the board.
 it goes over all the cells, changes the value to 0 and updates the cells to be empty. 
 */
-clearBoard(Cell** sudoku);
+void clearBoard(Cell** sudoku);
 
 /*
 This function gets x and y and genertes a board with y values != 0.

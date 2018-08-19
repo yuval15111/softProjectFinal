@@ -175,10 +175,6 @@ void addVaribles(double *lb, char *verType) {
 }
 
 int ILPSolver() {
-	/* try to solve the currentSudoku using ILP.
-	* if the board is solvable it writes the solution to the tempBoard and return 1,
-	*if the board is unsolvable it doesnt change the tempBoard and return 2,
-	if error occur return -1; */
 	GRBmodel* model = NULL;
 	GRBenv* env = NULL;
 	int ThreeDMatrixSize, optimStat, flag = 0, *index;

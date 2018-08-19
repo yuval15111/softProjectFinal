@@ -231,9 +231,7 @@ int validate(Cell** currentSudoku) { /*return 0 - erroneous board, 1 - solvable,
 		return 0;
 	}
 	ret = ILPSolver();
-	if (ret == 1) {
-
-		/* board is solveable*/
+	if (ret == 1) { /* board is solvable*/
 		if (saveGlob != 1) {
 			printf("Validation passes: board is solvable/n");
 		}
@@ -243,9 +241,9 @@ int validate(Cell** currentSudoku) { /*return 0 - erroneous board, 1 - solvable,
 		if (saveGlob != 1) {
 			printf("Validation failed: board is unsolvable/n");
 		}
-		return 0;
+		return 2;
 	}
-	return 0;
+	return 2;
 }
 
 void hint(int row, int col) {
@@ -523,9 +521,13 @@ void redoCurrent(int row, int col, int beforeRedoVal, int afterRedoVal) {
 		printf("Redo %d,%d: from %d to _\n", (col + 1), (row + 1), beforeRedoVal);
 		currentSudoku[row*N + col]->empty = 0;
 	}
-	if (undo_redo.current->next == NULL && undoBit == 1) {
+	if (undoBit == 1) {
 		undoBit = 0;
 	}
+	/*
+	if (undo_redo.current->next == NULL && undoBit == 1) {
+		undoBit = 0;
+	}*/
 	else if (undo_redo.current->next != NULL) {
 		undo_redo.current = undo_redo.current->next;
 	}
@@ -687,7 +689,7 @@ void autoFill(Cell** sudoku) {
 }
 
 void num_solutions(Cell** sudoku) {
-	int i, j;
+	int i, j, num;
 	if (isBoardErrorneus(sudoku) == 1) {
 		printf("Error: board contains erroneous values\n");
 		return;
@@ -703,12 +705,13 @@ void num_solutions(Cell** sudoku) {
 		}
 	}
 	printSudoku(temp);
-	int num = exBackTrac(temp);
+	num = exBackTrack(temp);
 	printf("Number of solutions: %d\n", num);
 	if (num == 1) {
 		printf("This is a good board!\n");
 	}
 	else printf("The puzzle has more than 1 solution, try to edit it further\n");
+	freeSudoku(temp);
 	return;
 }
 
@@ -730,7 +733,7 @@ void solve(char* path) {
 	int i = 0, dot = 0, k = 0, j;
 	int value, col, row;
 	Cell** loadBoard;
-	if (currentSudoku != NULL) {
+	if (currentSudoku != NULL) {/*didn't free the memory allocations from the prev game*/
 		freeList(undo_redo.head);
 		freeSudoku(currentSudoku);
 		freeSudoku(solvedSudoku);/*maybe delete????????????????????????????*/
@@ -780,7 +783,6 @@ void solve(char* path) {
 	checkErroneous(currentSudoku);
 }
 
-/*This func init the board for the default edit (edit without arguments)*/
 Cell** generateSudokuGame() {
 	int i, j;
 	N = 9;
@@ -789,9 +791,9 @@ Cell** generateSudokuGame() {
 		printf("Error: generateSudoku has failed\n");
 		exit(0);
 	}
-	for (i = 0; i < N; i++) {
+	for (i = 0; i < N; i++) { /*creating an empty sudoku*/
 		for (j = 0; j < N; j++) {
-			sudoku[i* N + j] = createCell(0); /*creating an empty sudoku*/
+			sudoku[i* N + j] = createCell(0);
 		}
 	}
 	return sudoku;
@@ -803,7 +805,7 @@ void edit(char* path) {
 	char number[256] = "\0";
 	int i = 0, dot = 0, k = 0,j, value, col, row;
 	Cell** loadBoard;
-	if (currentSudoku != NULL) {
+	if (currentSudoku != NULL) { /*didn't free the memory allocations from the prev game*/
 		freeList(undo_redo.head);
 		freeSudoku(currentSudoku);
 		freeSudoku(solvedSudoku);/*maybe delete????????????????????????????*/
@@ -874,7 +876,7 @@ clearBoard(Cell** sudoku) {
 
 /*should check the result!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
 
-generate(int x, int y) {
+void generate(int x, int y) {
 	int i, row, col, val, ret, countNum = 0, iter = 0, j, k = 0;
 	int startRow, startCol;
 	int numOfEmptyCells = checkNumOfEmptyCells(currentSudoku);
@@ -930,6 +932,10 @@ generate(int x, int y) {
 	for (k = 0; k < y; k++) {
 		row = rand() % N;
 		col = rand() % N;
+		while (currentSudoku[row*N + col]->empty == 1) {
+			row = rand() % N;
+			col = rand() % N;
+		}
 		currentSudoku[row*N + col]->empty = 1;
 		currentSudoku[row*N + col]->value = solvedSudoku[row*N + col]->value;
 	}

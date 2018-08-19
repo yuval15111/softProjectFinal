@@ -80,7 +80,7 @@ int findNextVal(Cell** sudoku, int row, int col, int curVal) {
 	return -1;
 }
 
-int exBackTrac(Cell** sudoku) {
+int exBackTrack(Cell** sudoku) {
 	int solutionCounter = 0, flag = 1, curRow = 0, curCol = 0, nextVal = 0;
 	int index[2] = { -1,-1 }, *popped;
 	int check = 0;
@@ -148,8 +148,3 @@ int exBackTrac(Cell** sudoku) {
 	}
 	return solutionCounter;
 }
-
-
-
-
-

@@ -9,7 +9,7 @@ The game takes place in this module.
 #ifndef GAME_H_
 #define GAME_H_
 #include<stdbool.h>
-/*mode: 1 - solve command and 2 - edit and 0 - init*/
+/*mode: 1 - solve command and 2 - edit and 0 - init*//*######delete??#######*/
 int idCommand; /*1 - solve command and 2 - edit and 0 - else 3-save*/
 int blockWidth, blockHeight, N; /*blockWidth=m; blockHeight=n; N=n*m*/
 int numOfEmptyCells; /*the number of empty cells in the sudoku*/
@@ -160,19 +160,23 @@ False - otherwise
 */
 bool isBlockValidGame(Cell** sudoku, int startRow, int startCol, int row, int col, int num);
 
-/*##############change after doing ILP##############################
-This function get the current game Sudoku and checks if there is any solution of this board
-by using determenistic Backtrack algorithm
-If there is no solution it prints a message to the user,
-otherwise, it replace the solved sudoku that save the solution of the current sudoku board
-and print a Appropriate message to the user.
+/*
+This function gets the current game Sudoku board and checks if there is any solution of this board
+by using ILP in module 'ILPAlgo'
+@return
+0 -> the board contains erroneous values
+1 -> the board is solvable (we found a solution using ILP)
+2 -> the board is unsolvable or the ILP algorithm didn't work
 */
 int validate(Cell** currentSudoku);
 
-/*######################change after doing ILP#####################
-This function get row and column.
+/*
+This function gets a row and a column, solve the current coard by using ILP,
+and print the value of the cell that the ILP found.
 @return
-the value of the cell in solvedSudoku[row][column] that saved the solution of the current board.
+nothing -> when the currentsudoku is erroneous or the cell is fixed or the cell is not empty 
+			or the board is unsolvable
+solvedSudoku[row][column] that saved the solution of the current board -> if the board is solvable
 */
 void hint(int row, int col);
 
@@ -253,36 +257,154 @@ the counter
 int checkNumOfEmptyCells(Cell** sudoku);
 
 /*
-This function gets value, row and column and checks if it is valid to put the value in currentSudoku[row][column]
-if it is - cell->value = val and checks if the game is over.
-If the game is over we are now enable only command of exit or restart
-otherwise - we contine as usual.
-If the val isn't valid we print to the user an appropriate message.
+This function gets sudoku, row, column, value and old command.
+it checks if it is valid to put the value in currentSudoku[row][column],
+if so it inserts the value to the cell, update it's erroneousNeib list by 
+using 'erroneousFixDel' and 'erroneousFixAdd' functions.
+in addition it adds a node to the undo_redo list by using 'addNode' function,
+and delete all nodes after the current pointer by using 'deleteListFrom' function.
+^^if undoBit==1 -> the last move the player did before was undo to the first node 
+in undo_redo list.
+^^if mode==1 and the number of empty cells==0 -> the game complete.
 */
 void set(Cell** sudoku, int row, int col, int val, char* oldCommand);
 
+/*
+This function makes undo to the current pointer of the undo_redo list:
+it checks what is the current cell parameters (col, row, before undo value, after undo value),
+changes the value of that cell to the after undo value,
+and prints the the undo move.
+it changes the current pointer to be the prev node.
+^^if the prev node is NULL (we made undo to the first node) -> undoBit=1.
+it fixes the cells' erroneousNeib lists by using 'erroneousFixDel' and 'erroneousFixAdd' functions.
+*/
+void undoCurrent();
+
+/*
+This function executes the 'undo' command:
+if undo_redo len==0 -> there are no moves to undo.
+if the autoCells of the current pointer of the undo_redo list > 0 -> it means that we do undo to autofill:
+	we move the current pointer to be the prev node for autocCells-1 times,
+	then we do undo to the current pointer by using 'udoCurrent' function, and change the current pointer to the next node,
+	then we change the current pointer again to it's prev for autoCells times.
+else -> we have only one node to undo, and we execute it by 'undoCurrent' function
+*/
 void undo();
 
 /*
-This function checks which command we need to execute and calls his function accordingly.
+This function executes redo for the current pointer in undo_redo list.
+it gets a row, col, before redo value and after redo value.
+it prints the redo move as asked,
+it changes the current pointer to be the next node:
+^^if undoBit==1 and the next node is NULL -> we don't change the current pointer.
+else if we have a next node -> we change it.
+afterwards we fix the cells' erroneousNeib lists by using 'erroneousFixDel' and 'erroneousFixAdd' functions.
 */
-void doCommand(char* command);
-/*
-This function free all the memory resources that we used to our sudoku board.
-this function free every cell in the board and after that free the matrix sudoku.
-*/
-void freeSudoku(Cell** sudoku);
+void redoCurrent(int row, int col, int beforeRedoVal, int afterRedoVal);
 
 /*
-This function free all the sudoku boards, say goodbye to the user and exit
+###################not done yet#######################3
+This function do the redo command:
+it checks if there are no moves to redo.
+if the undoBit==1 and the next node is NULL -> we did undo to the first node in undo_redo list,
+so we don't change the current pointer and updates the cell's new parameters.
+else if the next node's autoCells == 1 -> we re
+*/
+void redo();
+
+/*
+This function frees all the sudoku boards and exits the game.
 */
 void exitGame();
 
+/*
+This function resets the game by execute undo for undo_redo.len times, 
+and then frees the undo_redo list and initial a new one.
+after this function the board and the undo_redo list are empty. 
+*/
 void reset();
 
+/*
+This function saves the current coard to a file.
+it gets a sudoku to be saved and a path to save it to.
+if the mode is edit we check if the board is erroneous or unvalid, if so - we return.
+else, we open a file in path, and write the board in it.
+*/
+void save(Cell** sudoku, char* path);
+
+/*
+This function gets a sudoku and executes the autofill command.
+it does over the board and check for every cell what are the valid values for it.
+if there is one valid value for a cell, it inserts the row, col and the only valid value to the next empty places in the array 'arr'.
+afterwards it goes over the array 'arr' and insert the values to the right cells in sudoku bu using 'set' function.
+then it updates the autoCells to be the number of cells that had been inserted before it.
+
+*/
+void autoFill(Cell** sudoku);
+
+/*
+This function gets a sudoku and prints how many solutions it has.
+it copies currentSudoku to temp,
+then checks the number of solutions by using 'exBackTrack' function.
+*/
+void num_solutions(Cell ** sudoku);
+
+/*
+This function gets a sudoku and fix it's cells' erroneousNeib lists.
+it goes over the cells in sudoku and check if the value != 0,
+if so- it fixes the erroneousNeib lists of the board by using 'erroneousFixAdd' function.
+*/
+void checkErroneous(Cell** sudoku);
+
+/*
+This function gets a path to a saved sudoku and loads it.
+it initializes a new sudoku of the size that written in the file,
+then it goes over the file and inserts the values to the right cells.
+change the mode to 1 (solve), and fix the erroneous cells in the board by using 'checkErroneous' function.
+*/
 void solve(char* path);
 
+/*
+This function initializes an empty board of size 9x9 by default.
+it goes over all the cells in the board and inserts 0 as values.
+*/
+Cell** generateSudokuGame();
+
+/*
+This function gets a path to a saved sudoku and loads it.
+it initializes a new sudoku of the size that is written in the file,
+then it goes over the file and inserts the values to the right cells.
+change the mode to 2 (edit), updates 'markError' to be 1 by defalut,
+and fix the erroneous cells in the board by using 'checkErroneous' function.
+*/
 void edit(char* path);
+
+/*
+This function gets a sudoku and clear the board.
+it goes over all the cells, changes the value to 0 and updates the cells to be empty. 
+*/
+clearBoard(Cell** sudoku);
+
+/*
+This function gets x and y and genertes a board with y values != 0.
+it has 1000 chances to randomly choose x different cells and for each one randomly choose a valid value, 
+by using 'isRowValidGame', 'isColValidGame' and 'isBlockValidGame' functions,
+and to solve the current sudoku by using 'ILPSolver' function.
+if there is a solution, it randomly chooses y different cells and insert them to currentSudoku.
+*/
+void generate(int x, int y);
+
+/*
+This function checks which command we need to execute,
+and calls it's function accordingly.
+*/
+void doCommand(char* command);
+
+/*
+This function frees all the memory resources that we used to our sudoku board.
+this function frees every cell in the board and after that frees the matrix sudoku.
+*/
+void freeSudoku(Cell** sudoku);
 
 
 /*
@@ -292,9 +414,7 @@ This function is actually the place that the game occure.
 */
 void playGame();
 
-void num_solutions(Cell ** sudoku);
 
-Cell** generateSudokuGame();
 
 
 #endif /*GAME_H_*/

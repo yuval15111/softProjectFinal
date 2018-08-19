@@ -21,12 +21,12 @@ linkedList undo_redo;
 /*
 solvedSudoku is the solution of the board from the last time the user checked the validaty of the board
 */
-Cell** solvedSudoku;
+Cell** solvedSudoku = NULL;
 
 /*
 currentSudoku is the board that the user is playing on
 */
-Cell** currentSudoku;
+Cell** currentSudoku = NULL;
 
 int freeList(node* headNode) {
 	node* temp;

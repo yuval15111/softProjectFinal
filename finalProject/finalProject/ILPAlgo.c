@@ -19,7 +19,7 @@ Cell** generateSudoku() {
 	}
 	for (i = 0; i < N; i++) {
 		for (j = 0; j < N; j++) {
-			sudoku[i* N + j] = createCell(0); /*creating an empty sudoku*/
+			sudoku[i* N + j] = createCell(0); 
 		}
 	}
 	return sudoku;

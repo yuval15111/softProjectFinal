@@ -55,6 +55,7 @@ void addNode(linkedList* list, int row, int col, int val, int oldVal) {
 		list->head->row = row;
 		list->head->value = val;
 		list->head->autoCells = 0;
+		list->head->generateCells = 0;
 		list->head->oldValue = oldVal;
 		list->tail = list->head;
 		list->current = list->tail;
@@ -66,6 +67,7 @@ void addNode(linkedList* list, int row, int col, int val, int oldVal) {
 		list->tail->next->value = val;
 		list->tail->next->oldValue = oldVal;
 		list->tail->next->autoCells = 0;
+		list->tail->next->generateCells = 0;
 		list->tail->next->next = NULL;
 		list->tail->next->prev = list->tail;
 		list->tail = list->tail->next;
@@ -481,6 +483,10 @@ void undo() {
 		printf("Error: no moves to undo\n");
 		return;
 	}
+	/*undo all relevant cells when we got to generate*/
+	while (undo_redo.current->generateCells == 1) {
+		undoCurrent();
+	}
 	numOfAuto = undo_redo.current->autoCells;
 	if (numOfAuto > 0) {
 		for (i = 0; i < numOfAuto-1; i++) {
@@ -545,7 +551,15 @@ void redo() {
 	if (undo_redo.len == 0 || (undo_redo.current->next == NULL && undoBit == 0)) {
 		printf("Error: no moves to redo\n");
 		return;
-	}
+	}/*
+	while (undo_redo.current->generateCells == 1) {
+		col = undo_redo.current->col;
+		row = undo_redo.current->row;
+		beforeRedoVal = undo_redo.current->oldValue;
+		afterRedoVal = undo_redo.current->value;
+		printf("undo_redo_curr.generagecell: %d", undo_redo.current->generateCells);
+		redoCurrent(row, col, beforeRedoVal, afterRedoVal);
+	}*/
 	if (undo_redo.current->next == NULL && undoBit == 1) {
 		col = undo_redo.current->col;
 		row = undo_redo.current->row;
@@ -685,6 +699,7 @@ void autoFill(Cell** sudoku) {
 	}
 	printSudoku(sudoku);
 	autoFillBit = 0;
+	free(arr);
 }
 
 void num_solutions(Cell** sudoku) {
@@ -732,10 +747,12 @@ void solve(char* path) {
 	int i = 0, dot = 0, k = 0, j;
 	int value, col, row;
 	Cell** loadBoard;
-	if (currentSudoku != NULL) {/*didn't free the memory allocations from the prev game*/
+	if (currentSudoku != NULL) {/* free the memory allocations from the prev game*/
 		freeList(undo_redo.head);
 		freeSudoku(currentSudoku);
-		freeSudoku(solvedSudoku);/*maybe delete????????????????????????????*/
+		if (solvedSudoku) {
+			freeSudoku(solvedSudoku);
+		}
 	}
 	if ((fd = fopen(path, "r")) == NULL) {
 		printf("Error: File doesn't exsist or cannot be opened\n");
@@ -804,10 +821,12 @@ void edit(char* path) {
 	char number[256] = "\0";
 	int i = 0, dot = 0, k = 0,j, value, col, row;
 	Cell** loadBoard;
-	if (currentSudoku != NULL) { /*didn't free the memory allocations from the prev game*/
+	if (currentSudoku != NULL) { /* free the memory allocations from the prev game*/
 		freeList(undo_redo.head);
 		freeSudoku(currentSudoku);
-		freeSudoku(solvedSudoku);/*maybe delete????????????????????????????*/
+		if (solvedSudoku) {
+			freeSudoku(solvedSudoku);
+		}
 	}
 	if (*path == '\0') {
 		loadBoard = generateSudokuGame();
@@ -835,11 +854,11 @@ void edit(char* path) {
 					if (buff[i] != '.') {
 						number[i] = buff[i];
 						buff[i] = '\0';
-					}
+					}/*
 					else if (buff[i] == '.') {
 						dot = 1;
 						buff[i] = '\0';
-					}
+					}*/
 					i++;
 				}
 				number[i] = '\0';
@@ -848,10 +867,10 @@ void edit(char* path) {
 				loadBoard[k*(col*row) + j] = createCell(value);
 				if (value != 0) {
 					loadBoard[k*(col*row) + j]->empty = 1;
-				}
+				}/*
 				if (dot == 1) {
 					loadBoard[k*(col*row) + j]->fixed = 1;
-				}
+				}*/
 				dot = 0;
 			}
 		}
@@ -939,15 +958,15 @@ void generate(int x, int y) {
 		if (currentSudoku[row*N + col]->empty == 0) {
 			flag = 1;
 		}
-		printf("row: %d and col: %d\n", row, col);
 		if (flag == 1) {
-			currentSudoku[row*N + col]->empty = 1;
-			currentSudoku[row*N + col]->value = solvedSudoku[row*N + col]->value;
-			printSudoku(currentSudoku);
-			printf("sudoku change value: %d\n", currentSudoku[row*N + col]->value);
+			set(currentSudoku, row, col, solvedSudoku[row*N + col]->value, NULL);
+			undo_redo.tail->generateCells = 1;
+			/*currentSudoku[row*N + col]->empty = 1;
+			currentSudoku[row*N + col]->value = solvedSudoku[row*N + col]->value;*/
 			flag = 0;
 		}
 	}
+	printSudoku(currentSudoku);
 	return;
 }
 

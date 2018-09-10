@@ -225,6 +225,22 @@ bool isBlockValidGame(Cell** sudoku, int startRow, int startCol, int row, int co
 	return true;
 }
 
+int validateForFinishGame(Cell** currentSudoku) {
+	int ret = 0;
+	if (isBoardErrorneus(currentSudoku) == 1)
+	{
+		return 2;
+	}
+	ret = ILPSolver();
+	if (ret == 1) { /* board is solvable*/
+		return 1;
+	}
+	else if (ret == 2) {
+		return 2;
+	}
+	return 2;
+}
+
 int validate(Cell** currentSudoku) { /*return 0 - erroneous board, 1 - solvable, 2 - unsolvable*/
 	int ret = 0;
 	if (isBoardErrorneus(currentSudoku)==1)
@@ -431,7 +447,7 @@ void set(Cell** sudoku, int row, int col, int val, char* oldCommand) {
 			}
 		}
 		if (mode == 1 && checkNumOfEmptyCells(sudoku) == 0) { /*Last cell was filled*/
-			valid = validate(sudoku);
+			valid = validateForFinishGame(sudoku);
 			if (valid == 1) {
 				printf("Puzzle solved successfully\n");
 				mode = 0;
@@ -959,7 +975,9 @@ void generate(int x, int y) {
 			flag = 1;
 		}
 		if (flag == 1) {
+			generateGlob = 1;
 			set(currentSudoku, row, col, solvedSudoku[row*N + col]->value, NULL);
+			generateGlob = 0;
 			undo_redo.tail->generateCells = 1;
 			/*currentSudoku[row*N + col]->empty = 1;
 			currentSudoku[row*N + col]->value = solvedSudoku[row*N + col]->value;*/

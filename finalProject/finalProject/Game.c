@@ -567,16 +567,27 @@ void redo() {
 	if (undo_redo.len == 0 || (undo_redo.current->next == NULL && undoBit == 0)) {
 		printf("Error: no moves to redo\n");
 		return;
-	}/*
-	while (undo_redo.current->generateCells == 1) {
+	}
+	printf("current- col= %d, row = %d, val =%d, generateCells=%d\n", undo_redo.current->col, undo_redo.current->row, undo_redo.current->value, undo_redo.current->generateCells);
+	if (undo_redo.current->generateCells == 1) {
+		do {
+			col = undo_redo.current->col;
+			row = undo_redo.current->row;
+			beforeRedoVal = undo_redo.current->oldValue;
+			afterRedoVal = undo_redo.current->value;
+			redoCurrent(row, col, beforeRedoVal, afterRedoVal);
+			printf("current.next.generateCel= %d\n", undo_redo.current->generateCells);
+		} while (undo_redo.current->generateCells == 1 && undo_redo.current->next != NULL);
+	}
+	/*while ((undo_redo.current->generateCells == 1 && (undo_redo.current->next == NULL && undoBit == 1)) || (undo_redo.current->generateCells == 1 && undo_redo.current->next != NULL)) {
 		col = undo_redo.current->col;
 		row = undo_redo.current->row;
 		beforeRedoVal = undo_redo.current->oldValue;
 		afterRedoVal = undo_redo.current->value;
-		printf("undo_redo_curr.generagecell: %d", undo_redo.current->generateCells);
 		redoCurrent(row, col, beforeRedoVal, afterRedoVal);
-	}*/
-	if (undo_redo.current->next == NULL && undoBit == 1) {
+	}
+	*/
+	else if (undo_redo.current->next == NULL && undoBit == 1) {
 		col = undo_redo.current->col;
 		row = undo_redo.current->row;
 		beforeRedoVal = undo_redo.current->oldValue;
@@ -914,10 +925,12 @@ void generate(int x, int y) {
 	int i, row, col, val, ret, countNum = 0, iter = 0, j, k = 0, flag = 0;
 	int startRow, startCol;
 	int numOfEmptyCells = checkNumOfEmptyCells(currentSudoku);
+	node* temp = undo_redo.current;
 	if (numOfEmptyCells != (N*N)) {
 		printf("Error: board is not empty\n");
 		return;
 	}
+
 	while (iter <= 1000){
 		for (i = 0; i < x; i++) {
 			row = rand() % N;
@@ -964,6 +977,7 @@ void generate(int x, int y) {
 		return;
 	}
 	clearBoard(currentSudoku);
+	deleteListFrom(temp->next);
 	for (k = 0; k < y; k++) {
 		row = rand() % N;
 		col = rand() % N;
@@ -985,6 +999,14 @@ void generate(int x, int y) {
 		}
 	}
 	printSudoku(currentSudoku);
+	
+	undo_redo.current = undo_redo.head;
+	while(undo_redo.current!=NULL) {
+		printf("values: %d\n", undo_redo.current->value);
+		undo_redo.current = undo_redo.current->next;
+	}
+	undo_redo.current = undo_redo.tail;
+	
 	return;
 }
 

@@ -28,7 +28,10 @@ int isEmpty(stackNode* root) {
 
 int* pop(stackNode** root) {
 	stackNode* temp;
-	int popped[3] = { -1,-1,-1 };
+	int* popped = (int*)malloc(sizeof(int) * 3);
+	popped[0] = -1;
+	popped[1] = -1;
+	popped[2] = -1;
 	if (!isEmpty(*root)) {
 		return popped;
 	}
@@ -42,7 +45,10 @@ int* pop(stackNode** root) {
 }
 
 int* peek(stackNode* root) {
-	int popped[3] = { -1,-1,-1 };
+	int* popped = (int*)malloc(sizeof(int) * 3);
+	popped[0] = -1;
+	popped[1] = -1;
+	popped[2] = -1;
 	if (!isEmpty(root)) {
 		return popped;
 	}
@@ -82,7 +88,8 @@ int findNextVal(Cell** sudoku, int row, int col, int curVal) {
 
 int exBackTrack(Cell** sudoku) {
 	int solutionCounter = 0, flag = 1, curRow = 0, curCol = 0, nextVal = 0;
-	int index[2] = { -1,-1 }, *popped;
+	int index[2] = { -1,-1 }, *poppedMalloc, *popped;
+	int temp[3] = { -1,-1,-1 };
 	int check = 0;
 	stackNode* root = NULL;
 	push(&root, -1, -1, -1);
@@ -92,7 +99,12 @@ int exBackTrack(Cell** sudoku) {
 	while (flag) {
 		if (index[0] == -1) {  
 			solutionCounter++;
-			popped = pop(&root); 
+			poppedMalloc = pop(&root);
+			temp[0] = poppedMalloc[0];
+			temp[1] = poppedMalloc[1];
+			temp[2] = poppedMalloc[2];
+			free(poppedMalloc);
+			popped = temp;
 			if (root->col == -1) {
 				flag = 0; 
 				break;
@@ -101,7 +113,12 @@ int exBackTrack(Cell** sudoku) {
 			sudoku[popped[0]*N + popped[1]]->empty = 0;
 			index[0] = popped[0];
 			index[1] = popped[1];
-			popped = peek(root);
+			poppedMalloc = peek(root);
+			temp[0] = poppedMalloc[0];
+			temp[1] = poppedMalloc[1];
+			temp[2] = poppedMalloc[2];
+			free(poppedMalloc);
+			popped = temp;
 			curCol = popped[1];
 			curRow = popped[0];
 		}
@@ -109,9 +126,19 @@ int exBackTrack(Cell** sudoku) {
 		/* find the next value (value+1) for the curr cell. */
 		nextVal = findNextVal(sudoku, curRow, curCol, sudoku[curRow*N + curCol]->value);
 		if (nextVal == -1) { /*if there is not valid number*/
-			popped = peek(root);
+			poppedMalloc = peek(root);
+			temp[0] = poppedMalloc[0];
+			temp[1] = poppedMalloc[1];
+			temp[2] = poppedMalloc[2];
+			free(poppedMalloc);
+			popped = temp;
 			if (popped[0] == curRow && popped[1] == curCol) { /* check if the cell is in the stack, means that we need to popped because there is no a valid number for this cell*/
-				popped = pop(&root);
+				poppedMalloc = pop(&root);
+				temp[0] = poppedMalloc[0];
+				temp[1] = poppedMalloc[1];
+				temp[2] = poppedMalloc[2];
+				free(poppedMalloc);
+				popped = temp;
 				if (root->col == -1) {
 					flag = 0;
 					break;
@@ -120,7 +147,12 @@ int exBackTrack(Cell** sudoku) {
 				/* initialize the cell to be 0 */
 				sudoku[popped[0]*N + popped[1]]->value = 0;
 				sudoku[popped[0]*N + popped[1]]->empty = 0;
-				popped = peek(root);
+				poppedMalloc = peek(root);
+				temp[0] = poppedMalloc[0];
+				temp[1] = poppedMalloc[1];
+				temp[2] = poppedMalloc[2];
+				free(poppedMalloc);
+				popped = temp;
 			}
 
 			/* we stepBack to the prev cell and we will find for this cell the next valid number (if there is)*/

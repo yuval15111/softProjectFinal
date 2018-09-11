@@ -145,7 +145,7 @@ Cell* copyCell(Cell* cell) {
 
 void printSeparator() {
 	int i = 0;
-	for (i = 0; i < 4 * N + blockWidth + 1; i++) {
+	for (i = 0; i < 4 * N + blockHeight + 1; i++) {
 		printf("-");
 	}
 	printf("\n");
@@ -154,11 +154,11 @@ void printSeparator() {
 void printSudoku(Cell** sudoku) {
 	int i, j, k, s;
 	printSeparator();
-	for (i = 0; i <blockHeight; i++) {
-		for (j = 0; j < blockWidth; j++) {
-			for (s = 0; s<blockWidth; s++) {
+	for (i = 0; i <blockWidth; i++) {
+		for (j = 0; j < blockHeight; j++) {
+			for (s = 0; s<blockHeight; s++) {
 				printf("|");
-				for (k = 0; k < blockHeight; k++) { 
+				for (k = 0; k < blockWidth; k++) {
 					printf(" ");
 					if (sudoku[i*blockWidth*N + j * N + s * blockHeight + k]->empty == 0) {
 						printf("   ");
@@ -510,14 +510,11 @@ void undoCurrent(int* changesData) {
 }
 
 void undo() {
-	int numOfNodes = 0, j, k, i, check=0;
+	int numOfNodes = 0, j, k, i;
 	int* changesData = (int*)malloc(sizeof(int)*((4 * N*N) + 4));
-	node* temp = undo_redo.head;
+	node* temp = NULL;
 	for (i = 0; i < N*N + 4; i++) {
 		changesData[i] = -1;
-	}
-	for (i = 0; i < N*N + 4; i = i + 4) {
-		printf("values:%d,%d,%d,%d\n", changesData[i], changesData[i + 1], changesData[i + 2], changesData[i + 3]);
 	}
 	if (undo_redo.len == 0 || undoBit == 1) {
 		printf("Error: no moves to undo\n");
@@ -525,16 +522,9 @@ void undo() {
 	}
 	numOfNodes = undo_redo.current->autoCells;
 	/*undo all relevant cells when we got to generate*/
-	for (i = 0; i < undo_redo.len; i++) {
-		printf("value is: %d and generate: %d\n", undo_redo.head->value, undo_redo.head->generateCells);
-		undo_redo.head = undo_redo.head->next;
-	}
-	undo_redo.head = temp;
 	if (undo_redo.current->generateCells == 1) {
 		while (undo_redo.current->generateCells == 1 && undoBit == 0) {
 			undoCurrent(changesData);
-			check++;
-			printf("check first=%d", check);
 		}
 	}
 	else if (numOfNodes > 0) {
@@ -557,9 +547,6 @@ void undo() {
 	}
 	else {
 		undoCurrent(changesData);
-	}
-	for (i = 0; i < N*N + 4 ; i= i+4) {
-		printf("values:%d,%d,%d,%d\n", changesData[i], changesData[i + 1], changesData[i + 2], changesData[i + 3]);
 	}
 	printSudoku(currentSudoku);
 	printAllChangesUndo(changesData);

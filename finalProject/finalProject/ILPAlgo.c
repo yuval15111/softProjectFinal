@@ -134,8 +134,8 @@ int oneValPerBlockCon(GRBmodel** model, int* index, double* val) {
 	int i, j, e, k, l;
 	int count, flag = 0;
 	for (e = 0; e < N; e++) {
-		for (k = 0; k < blockHeight; k++) {
-			for (l = 0; l < blockWidth; l++) {
+		for (k = 0; k < blockWidth; k++) {
+			for (l = 0; l < blockHeight; l++) {
 				count = 0;
 				for (i = k * blockHeight; i < (k + 1) * blockHeight; i++) {
 					for (j = l * blockWidth; j < (l + 1) * blockWidth; j++) {

@@ -18,7 +18,7 @@ Cell** generateSudoku() {
 	}
 	for (i = 0; i < N; i++) {
 		for (j = 0; j < N; j++) {
-			sudoku[i* N + j] = createCell(0); 
+			sudoku[i* N + j] = createCell(0);
 		}
 	}
 	return sudoku;
@@ -238,8 +238,8 @@ int ILPSolver() {
 
 
 /*
-
 int ILPSolver() {
 	printf("bla: %d", N);
 	return -1;
-}*/
+}
+*/

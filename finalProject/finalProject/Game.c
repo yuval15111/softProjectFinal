@@ -163,28 +163,28 @@ void printSudoku(Cell** sudoku) {
 		}
 		for (j = 0; j < N; j++) {
 			if (j % blockWidth == 0) {
-				printf("%s", "|");
+				printf("|");
 			}
 			//currentNum = table[i][j].currentNum;
-			printf("%s", " ");
+			printf(" ");
 			if (sudoku[i*N + j]->empty == 0) {
-				printf("%s", "  ");
+				printf("  ");
 			}
 			else {
-				printf("%d", sudoku[i*N + j]->value);
+				printf("%2d", sudoku[i*N + j]->value);
 			}
-			if (currentSudoku[i*N + j]->fixed) {
-				printf("%s", ".");
+			if (currentSudoku[i*N + j]->fixed == 1) {
+				printf(".");
 			}
 			else if (sudoku[i*N + j]->erroneous == 1 && (mode == 2 || markError == 1)) {
-				printf("%s", "*");
+				printf("*");
 			}
 			else {
-				printf("%s", " ");
+				printf(" ");
 			}
 
 		}
-		printf("%s", "|\n");
+		printf("|\n");
 	}
 	printSeparator();
 

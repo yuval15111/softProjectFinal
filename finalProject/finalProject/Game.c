@@ -160,7 +160,7 @@ void printSudoku(Cell** sudoku) {
 				printf("|");
 				for (k = 0; k < blockWidth; k++) { /*cols in the block*/
 					printf(" ");
-					if (sudoku[i*blockHeight*N + j * N + s * blockWidth + k]->empty == 0 || sudoku[i*blockHeight*N + j * N + s * blockWidth + k]->value == 0) {
+					if (sudoku[i*blockHeight*N + j * N + s * blockWidth + k]->empty == 0) {
 						printf("   ");
 					}
 					else {
@@ -503,14 +503,16 @@ void undoCurrent(int* changesData) {
 	}
 	currentSudoku[row*N + col]->value = afterUndoVal;
 	if (afterUndoVal != 0) {
+		currentSudoku[row*N + col]->empty = 1;
 		erroneousFixAdd(row, col, afterUndoVal);
 	}
+	else currentSudoku[row*N + col]->empty = 0;
 }
 
 void undo() {
 	int numOfNodes = 0, j, k, i;
-	int* changesData = (int*)malloc(sizeof(int)*((4 * N*N) + 1));
-	memset(changesData, -1, (N*N) + 1);
+	int* changesData = (int*)malloc(sizeof(int)*((4 * N*N) + 4));
+	memset(changesData, -1, (N*N) + 4);
 	node* temp = NULL;
 	if (undo_redo.len == 0 || undoBit == 1) {
 		printf("Error: no moves to undo\n");
@@ -522,10 +524,6 @@ void undo() {
 		while (undo_redo.current->generateCells == 1 && undoBit == 0) {
 			undoCurrent(changesData);
 		}
-		printSudoku(currentSudoku);
-		printAllChangesUndo(changesData);
-		free(changesData);
-		return;
 	}
 	else if (numOfNodes > 0) {
 		for (i = 0; i < numOfNodes-1; i++) {
@@ -601,14 +599,16 @@ void redoCurrent(int row, int col, int beforeRedoVal, int afterRedoVal, int* cha
 	}
 	currentSudoku[row*N + col]->value = afterRedoVal;
 	if (afterRedoVal != 0) {
+		currentSudoku[row*N + col]->empty = 1;
 		erroneousFixAdd(row, col, afterRedoVal);
 	}
+	else currentSudoku[row*N + col]->empty = 0;
 }
 
 void redo() {
 	int col, row, beforeRedoVal, afterRedoVal;
-	int* changesData = (int*)malloc(sizeof(int) * ((4 * N * N) + 1));
-	memset(changesData, -1, (N*N)+1);
+	int* changesData = (int*)malloc(sizeof(int) * ((4 * N * N) + 4));
+	memset(changesData, -1, (N*N)+4);
 	if (undo_redo.len == 0 || (undo_redo.current->next == NULL && undoBit == 0)) {
 		printf("Error: no moves to redo\n");
 		return;
@@ -858,7 +858,7 @@ void solve(char* path) {
 		printf("Error: File doesn't exsist or cannot be opened\n");
 		return;
 	}
-	if ((fscanf(fd, "%d %d", &col, &row)) != 2) {
+	if ((fscanf(fd, "%d %d", &row, &col)) != 2) {
 		printf("Error: File doesn't exsist or cannot be opened\n");
 		return;
 	}
@@ -939,7 +939,7 @@ void edit(char* path) {
 			printf("Error: File cannot be opened\n");
 			return;
 		}
-		if ((fscanf(fd, "%d %d", &col, &row)) != 2) {
+		if ((fscanf(fd, "%d %d", &row, &col)) != 2) {
 			printf("Error: File doesn't exsist or cannot be opened\n");
 			return;
 		}

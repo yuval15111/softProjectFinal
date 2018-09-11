@@ -887,13 +887,6 @@ void solve(char* path) {
 	int i = 0, dot = 0, k = 0, j;
 	int value, col, row;
 	Cell** loadBoard;
-	if (currentSudoku != NULL) {/* free the memory allocations from the prev game*/
-		freeList(undo_redo.head);
-		freeSudoku(currentSudoku);
-		if (solvedSudoku) {
-			freeSudoku(solvedSudoku);
-		}
-	}
 	if ((fd = fopen(path, "r")) == NULL) {
 		printf("Error: File doesn't exsist or cannot be opened\n");
 		return;
@@ -901,6 +894,13 @@ void solve(char* path) {
 	if ((fscanf(fd, "%d %d", &col, &row)) != 2) {
 		printf("Error: File doesn't exsist or cannot be opened\n");
 		return;
+	}
+	if (currentSudoku != NULL) {/* free the memory allocations from the prev game*/
+		freeList(undo_redo.head);
+		freeSudoku(currentSudoku);
+		if (solvedSudoku) {
+			freeSudoku(solvedSudoku);
+		}
 	}
 	blockWidth = row; /*n*/
 	blockHeight = col; /*m*/
@@ -937,6 +937,7 @@ void solve(char* path) {
 	initList(&undo_redo);
 	currentSudoku = loadBoard;
 	checkErroneous(currentSudoku);
+	printSudoku(currentSudoku);
 }
 
 Cell** generateSudokuGame() {
@@ -961,14 +962,15 @@ void edit(char* path) {
 	char number[256] = "\0";
 	int i = 0, dot = 0, k = 0,j, value, col, row;
 	Cell** loadBoard;
-	if (currentSudoku != NULL) { /* free the memory allocations from the prev game*/
-		freeList(undo_redo.head);
-		freeSudoku(currentSudoku);
-		if (solvedSudoku) {
-			freeSudoku(solvedSudoku);
-		}
-	}
+
 	if (*path == '\0') {
+		if (currentSudoku != NULL) { /* free the memory allocations from the prev game*/
+			freeList(undo_redo.head);
+			freeSudoku(currentSudoku);
+			if (solvedSudoku) {
+				freeSudoku(solvedSudoku);
+			}
+		}
 		loadBoard = generateSudokuGame();
 		blockWidth = 3;
 		blockHeight = 3;
@@ -982,6 +984,13 @@ void edit(char* path) {
 		if ((fscanf(fd, "%d %d", &col, &row)) != 2) {
 			printf("Error: File doesn't exsist or cannot be opened\n");
 			return;
+		}
+		if (currentSudoku != NULL) { /* free the memory allocations from the prev game*/
+			freeList(undo_redo.head);
+			freeSudoku(currentSudoku);
+			if (solvedSudoku) {
+				freeSudoku(solvedSudoku);
+			}
 		}
 		blockWidth = row;
 		blockHeight = col;
@@ -1020,6 +1029,7 @@ void edit(char* path) {
 	initList(&undo_redo);
 	currentSudoku = loadBoard;
 	checkErroneous(currentSudoku);
+	printSudoku(currentSudoku);
 }
 
 void clearBoard(Cell** sudoku) {

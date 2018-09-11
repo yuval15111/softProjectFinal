@@ -145,7 +145,7 @@ Cell* copyCell(Cell* cell) {
 
 void printSeparator() {
 	int i = 0;
-	for (i = 0; i < 4 * N + blockWidth + 1; i++) {
+	for (i = 0; i < 4 * N + blockHeight + 1; i++) {
 		printf("-");
 	}
 	printf("\n");
@@ -697,6 +697,7 @@ void redo() {
 void exitGame() {
 	freeSudoku(currentSudoku);
 	freeSudoku(solvedSudoku);
+	freeList(undo_redo.head);
 	printf("Exiting...\n");
 	exit(0);
 }
@@ -818,7 +819,6 @@ void num_solutions(Cell** sudoku) {
 			}
 		}
 	}
-	printSudoku(temp);
 	num = exBackTrack(temp);
 	printf("Number of solutions: %d\n", num);
 	if (num == 1) {

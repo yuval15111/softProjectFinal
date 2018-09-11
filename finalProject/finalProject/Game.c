@@ -160,7 +160,7 @@ void printSudoku(Cell** sudoku) {
 				printf("|");
 				for (k = 0; k < blockWidth; k++) { /*cols in the block*/
 					printf(" ");
-					if (sudoku[i*blockHeight*N + j * N + s * blockWidth + k]->empty == 0) {
+					if (sudoku[i*blockHeight*N + j * N + s * blockWidth + k]->empty == 0 || sudoku[i*blockHeight*N + j * N + s * blockWidth + k]->value == 0) {
 						printf("   ");
 					}
 					else {

@@ -153,7 +153,43 @@ void printSeparator() {
 
 void printSudoku(Cell** sudoku) {
 	int i, j, k, s;
+	//printSeparator();
+
+
+
+	for (i = 0; i < N; i++) {
+		if (i % blockHeight == 0) {
+			printSeparator();
+		}
+		for (j = 0; j < N; j++) {
+			if (j % blockWidth == 0) {
+				printf("%s", "|");
+			}
+			//currentNum = table[i][j].currentNum;
+			printf("%s", " ");
+			if (sudoku[i*N + j]->empty == 0) {
+				printf("%s", "  ");
+			}
+			else {
+				printf("%d", sudoku[i*N + j]->value);
+			}
+			if (currentSudoku[i*N + j]->fixed) {
+				printf("%s", ".");
+			}
+			else if (sudoku[i*N + j]->erroneous == 1 && (mode == 2 || markError == 1)) {
+				printf("%s", "*");
+			}
+			else {
+				printf("%s", " ");
+			}
+
+		}
+		printf("%s", "|\n");
+	}
 	printSeparator();
+
+
+/*
 	for (i = 0; i <blockWidth; i++) {
 		for (j = 0; j < blockHeight; j++) {
 			for (s = 0; s<blockHeight; s++) {
@@ -185,7 +221,7 @@ void printSudoku(Cell** sudoku) {
 			printf("|\n");
 		}
 		printSeparator();
-	}
+	}*/
 }
 
 bool isRowValidGame(Cell** sudoku, int row, int col, int num) {

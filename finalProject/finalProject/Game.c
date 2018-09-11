@@ -737,7 +737,9 @@ void redo() {
 void exitGame() {
 	freeSudoku(currentSudoku);
 	freeSudoku(solvedSudoku);
-	freeList(undo_redo.head);
+	if (undo_redo.head) {
+		freeList(undo_redo.head);
+	}
 	printf("Exiting...\n");
 	exit(0);
 }
@@ -1181,7 +1183,9 @@ void freeSudoku(Cell** sudoku) {
 		for (i = 0; i < N; i++) {
 			for (j = 0; j < N; j++) {
 				if (sudoku[i*N + j]->fixed == 0) {
-					freeList(sudoku[i*N + j]->erroneousNeib.head);
+					if (sudoku[i*N + j]->erroneousNeib.head) {
+						freeList(sudoku[i*N + j]->erroneousNeib.head);
+					}
 				}
 				free(sudoku[i*N + j]);
 			}

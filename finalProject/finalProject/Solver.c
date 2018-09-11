@@ -79,7 +79,7 @@ void findNextEmptyCell(Cell** sudoku, int row, int col, int* index) {
 int findNextVal(Cell** sudoku, int row, int col, int curVal) {
 	int tempVal = (curVal+1);
 	for (tempVal; tempVal <= N; tempVal++) {
-		if ((isRowValidGame(sudoku, row, col, tempVal)) && (isColValidGame(sudoku, row, col, tempVal)) && (isBlockValidGame(sudoku, row - (row%blockHeight), col - (col%blockWidth),row ,col, tempVal))) {
+		if ((isRowValidGame(sudoku, row, col, tempVal)) && (isColValidGame(sudoku, row, col, tempVal)) && (isBlockValidGame(sudoku, row - (row%blockWidth), col - (col%blockHeight),row ,col, tempVal))) {
 			return tempVal;
 		}
 	}
@@ -177,6 +177,9 @@ int exBackTrack(Cell** sudoku) {
 			flag = 0;
 			break;
 		}
+	}
+	while (isEmpty(root)) {
+		pop(&root);
 	}
 	return solutionCounter;
 }

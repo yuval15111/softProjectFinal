@@ -11,7 +11,7 @@ The game takes place in this module.
 #include<stdbool.h>
 /*mode: 1 - solve command and 2 - edit and 0 - init*//*######delete??#######*/
 int idCommand; /*1 - solve command and 2 - edit and 0 - else 3-save*/
-int blockWidth, blockHeight, N; /*blockWidth=m; blockHeight=n; N=n*m*/
+int blockHeight, blockWidth, N; /*blockHeight=m; blockWidth=n; N=n*m*/
 int numOfEmptyCells; /*the number of empty cells in the sudoku*/
 
 /*
@@ -54,7 +54,7 @@ fixed - 0 -> the cell isnt fixed, 1 - otherwise
 empty - 0 -> the cell isnt empty, 1 - otherwise
 arr - this field is being used in the random backtrack algorithm:
 arr[0] - the number of candidate that can be in the cell value
-arr[1] - arr[(blockWidth*blockHeight) + 1]: 1 - if the index (that represent the value)
+arr[1] - arr[(blockHeight*blockWidth) + 1]: 1 - if the index (that represent the value)
 is a candidate and 0 - otherwise
 */
 typedef struct cell_t {

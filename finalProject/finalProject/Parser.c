@@ -30,6 +30,9 @@ char* getCommand() {
 			exitGame();
 		}
 		newType = strtok(command, " \t\r\n");
+		if (newType == NULL) {
+			continue;
+		}
 		if ((check = strcmp(newType, "solve")) == 0) {
 			idCommand = 1;
 			while ((newType = strtok(NULL, "\n")) != NULL) {

@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include <fcntl.h>
+#include <string.h>
 #include "Solver.h"
 #include "Parser.h"
 #include "Game.h"
@@ -11,8 +12,8 @@ int undoBit; /*when we did undo to the first cell in the undo_redo list -> undoB
 int autoFillBit = 0; /*autoFillBit = 1 when the autofill command succeeds*/
 int mode = 0; /*1 - solve mode and 2 - edit mode and 0 - init*/
 int saveGlob = 0; /*when we do save command -> 1*/
-int generateGlob = 0; /*when we do generate -> 1*/
-		
+int generateSudokuPrint = 0; /*when we don't want the sudoku to be printed in generate command*/
+int generateGlobal = 0; /*1-> don't insert nodes to undo_redo list in generate command*/
 /*
 A linked list for all the play moves
 */
@@ -424,26 +425,28 @@ void set(Cell** sudoku, int row, int col, int val, char* oldCommand) {
 				erroneousFixAdd(row, col, val);
 			}
 		}
-		if (autoFillBit == 0 && generateGlob == 0) {
+		if (autoFillBit == 0 && generateSudokuPrint == 0) {
 			printSudoku(sudoku);
 		}
-		if (undo_redo.len == 0) {
+		if (undo_redo.len == 0 && generateGlobal == 0) {
 			addNode(&undo_redo, row, col, val, oldVal);
 		}
-		else if (undoBit==1) { /*we did undo to the first cell in undo_redo list*/
+		else if (undoBit==1 && generateGlobal == 0) { /*we did undo to the first cell in undo_redo list*/
 			deleteListFrom(undo_redo.current); /*deleteListFrom(X) - delete X and the nodes after until the end*/
 			initList(&undo_redo);
 			addNode(&undo_redo, row, col, val, oldVal);
 			undoBit = 0;
 		}
 		else {
-			if (undo_redo.current->next == NULL) {
-				addNode(&undo_redo, row, col, val, oldVal);
-			}
-			else {
-				undo_redo.tail = undo_redo.current;
-				deleteListFrom(undo_redo.current->next);
-				addNode(&undo_redo, row, col, val, oldVal);
+			if (generateGlobal == 0) {
+				if (undo_redo.current->next == NULL) {
+					addNode(&undo_redo, row, col, val, oldVal);
+				}
+				else {
+					undo_redo.tail = undo_redo.current;
+					deleteListFrom(undo_redo.current->next);
+					addNode(&undo_redo, row, col, val, oldVal);
+				}
 			}
 		}
 		if (mode == 1 && checkNumOfEmptyCells(sudoku) == 0) { /*Last cell was filled*/
@@ -458,26 +461,38 @@ void set(Cell** sudoku, int row, int col, int val, char* oldCommand) {
 	}
 }
 
-void undoCurrent() {
-	int col, row, beforeUndoVal, afterUndoVal;
+void printAllChangesUndo(int* changesData) {
+	int indx = 0;
+	while (changesData[indx] != -1) {
+		if (changesData[(indx + 2)] != 0 && changesData[(indx + 3)] != 0) {
+			printf("Undo %d,%d: from %d to %d\n", (changesData[(indx + 1)] + 1), (changesData[indx] + 1), changesData[(indx + 2)], changesData[(indx + 3)]);
+		}
+		else if (changesData[(indx + 2)] == 0 && changesData[(indx + 3)] == 0) {
+			printf("Undo %d,%d: from _ to _\n", (changesData[(indx + 1)] + 1), (changesData[indx] + 1));
+		}
+		else if (changesData[(indx + 2)] == 0) {
+			printf("Undo %d,%d: from _ to %d\n", (changesData[(indx + 1)] + 1), (changesData[indx] + 1), changesData[(indx + 3)]);
+			currentSudoku[changesData[indx] * N + changesData[(indx + 1)]]->empty = 1;
+		}
+		else {
+			printf("Undo %d,%d: from %d to _\n", (changesData[(indx + 1)] + 1), (changesData[indx] + 1), changesData[(indx + 2)]);
+			currentSudoku[changesData[indx] * N + changesData[(indx + 1)]]->empty = 0;
+		}
+		indx = indx + 4;
+	}
+}
+
+void undoCurrent(int* changesData) {
+	int row, col, beforeUndoVal, afterUndoVal;
+	int indx = firstEmptyInArr(changesData);
+	row= undo_redo.current->row;
 	col = undo_redo.current->col;
-	row = undo_redo.current->row;
 	beforeUndoVal = undo_redo.current->value;
 	afterUndoVal = undo_redo.current->oldValue;
-	if (beforeUndoVal != 0 && afterUndoVal != 0) {
-		printf("Undo %d,%d: from %d to %d\n", (col + 1), (row + 1), beforeUndoVal, afterUndoVal);
-	}
-	else if (beforeUndoVal == 0 && afterUndoVal == 0) {
-		printf("Undo %d,%d: from _ to _\n", (col + 1), (row + 1));
-	}
-	else if (beforeUndoVal == 0) {
-		printf("Undo %d,%d: from _ to %d\n", (col + 1), (row + 1), afterUndoVal);
-		currentSudoku[row*N + col]->empty = 1;
-	}
-	else {
-		printf("Undo %d,%d: from %d to _\n", (col + 1), (row + 1), beforeUndoVal);
-		currentSudoku[row*N + col]->empty = 0;
-	}
+	changesData[indx] = row;
+	changesData[(indx+1)] = col;
+	changesData[(indx + 2)] = beforeUndoVal;
+	changesData[(indx + 3)] = afterUndoVal;
 	if (undo_redo.current->prev != NULL) {
 		undo_redo.current = undo_redo.current->prev;
 	}
@@ -493,28 +508,32 @@ void undoCurrent() {
 }
 
 void undo() {
-	int numOfAuto = 0, j, k, i;
+	int numOfNodes = 0, j, k, i;
+	int* changesData = (int*)malloc(sizeof(int)*((4 * N*N) + 1));
+	memset(changesData, -1, (N*N) + 1);
 	node* temp = NULL;
 	if (undo_redo.len == 0 || undoBit == 1) {
 		printf("Error: no moves to undo\n");
 		return;
 	}
+	numOfNodes = undo_redo.current->autoCells;
 	/*undo all relevant cells when we got to generate*/
-	while (undo_redo.current->generateCells == 1) {
-		undoCurrent();
+	if (undo_redo.current->generateCells == 1) {
+		while (undo_redo.current->generateCells == 1 && undoBit == 0) {
+			undoCurrent(changesData);
+		}
 	}
-	numOfAuto = undo_redo.current->autoCells;
-	if (numOfAuto > 0) {
-		for (i = 0; i < numOfAuto-1; i++) {
+	else if (numOfNodes > 0) {
+		for (i = 0; i < numOfNodes-1; i++) {
 			undo_redo.current = undo_redo.current->prev;
 		}
-		for (j = 0; j < numOfAuto; j++) {
+		for (j = 0; j < numOfNodes; j++) {
 			temp = undo_redo.current;
-			undoCurrent();
+			undoCurrent(changesData);
 			undo_redo.current = temp->next;
 		}
 		undo_redo.current = temp;
-		for (k = 0; k < numOfAuto; k++) {
+		for (k = 0; k < numOfNodes; k++) {
 			if (undo_redo.current->prev == NULL) {
 				undoBit = 1;
 				break;
@@ -523,32 +542,52 @@ void undo() {
 		}
 	}
 	else {
-		undoCurrent();
+		undoCurrent(changesData);
+	}
+	printSudoku(currentSudoku);
+	printAllChangesUndo(changesData);
+	free(changesData);
+}
+
+int firstEmptyInArr(int* arr) {
+	int i = 0;
+	for (i; i < N*N; i++) {
+		if (arr[i] == -1) {
+			return i;
+		}
 	}
 }
 
-void redoCurrent(int row, int col, int beforeRedoVal, int afterRedoVal) {
-	if (beforeRedoVal != 0 && afterRedoVal != 0) {
-		printf("Redo %d,%d: from %d to %d\n", (col + 1), (row + 1), beforeRedoVal, afterRedoVal);
+void PrintAllChangesRedo(int* changesData) {
+	int indx = 0;
+	while (changesData[indx] != -1) {
+		if (changesData[(indx + 2)] != 0 && changesData[(indx + 3)] != 0) {
+			printf("Redo %d,%d: from %d to %d\n", (changesData[(indx + 1)] + 1), (changesData[indx] + 1), changesData[(indx + 2)], changesData[(indx + 3)]);
+		}
+		else if (changesData[(indx + 2)] == 0 && changesData[(indx + 3)] == 0) {
+			printf("Redo %d,%d: from _ to _\n", (changesData[(indx + 1)] + 1), (changesData[indx] + 1));
+		}
+		else if (changesData[(indx + 2)] == 0) {
+			printf("Redo %d,%d: from _ to %d\n", (changesData[(indx + 1)] + 1), (changesData[indx] + 1), changesData[(indx + 3)]);
+			currentSudoku[changesData[indx] *N + changesData[(indx + 1)]]->empty = 1;
+		}
+		else {
+			printf("Redo %d,%d: from %d to _\n", (changesData[(indx + 1)] + 1), (changesData[indx] + 1), changesData[(indx + 2)]);
+			currentSudoku[changesData[indx] *N + changesData[(indx + 1)]]->empty = 0;
+		}
+		indx = indx + 4;
 	}
-	else if (beforeRedoVal == 0 && afterRedoVal == 0) {
-		printf("Redo %d,%d: from _ to _\n", (col + 1), (row + 1));
-	}
-	else if (beforeRedoVal == 0) {
-		printf("Redo %d,%d: from _ to %d\n", (col + 1), (row + 1), afterRedoVal);
-		currentSudoku[row*N + col]->empty = 1;
-	}
-	else {
-		printf("Redo %d,%d: from %d to _\n", (col + 1), (row + 1), beforeRedoVal);
-		currentSudoku[row*N + col]->empty = 0;
-	}
+}
+
+void redoCurrent(int row, int col, int beforeRedoVal, int afterRedoVal, int* changesData) {
+	int indx = firstEmptyInArr(changesData);
+	changesData[indx] = row;
+	changesData[(indx + 1)] = col;
+	changesData[(indx + 2)] = beforeRedoVal;
+	changesData[(indx + 3)] = afterRedoVal;
 	if (undoBit == 1) {
 		undoBit = 0;
 	}
-	/*
-	if (undo_redo.current->next == NULL && undoBit == 1) {
-		undoBit = 0;
-	}*/
 	else if (undo_redo.current->next != NULL) {
 		undo_redo.current = undo_redo.current->next;
 	}
@@ -564,21 +603,54 @@ void redoCurrent(int row, int col, int beforeRedoVal, int afterRedoVal) {
 
 void redo() {
 	int col, row, beforeRedoVal, afterRedoVal;
+	int* changesData = (int*)malloc(sizeof(int) * ((4 * N * N) + 1));
+	memset(changesData, -1, (N*N)+1);
 	if (undo_redo.len == 0 || (undo_redo.current->next == NULL && undoBit == 0)) {
 		printf("Error: no moves to redo\n");
 		return;
 	}
-	printf("current- col= %d, row = %d, val =%d, generateCells=%d\n", undo_redo.current->col, undo_redo.current->row, undo_redo.current->value, undo_redo.current->generateCells);
-	if (undo_redo.current->generateCells == 1) {
-		do {
+	if (undo_redo.current->next == NULL && undoBit == 1) {
+		col = undo_redo.current->col;
+		row = undo_redo.current->row;
+		beforeRedoVal = undo_redo.current->oldValue;
+		afterRedoVal = undo_redo.current->value;
+		redoCurrent(row, col, beforeRedoVal, afterRedoVal, changesData);
+	}
+	else if (undo_redo.current->generateCells == 1 && undoBit == 1) {
+		col = undo_redo.current->col;
+		row = undo_redo.current->row;
+		beforeRedoVal = undo_redo.current->oldValue;
+		afterRedoVal = undo_redo.current->value;
+		redoCurrent(row, col, beforeRedoVal, afterRedoVal, changesData);
+		while (undo_redo.current->next != NULL && undo_redo.current->next->generateCells == 1) {
+			col = undo_redo.current->next->col;
+			row = undo_redo.current->next->row;
+			beforeRedoVal = undo_redo.current->next->oldValue;
+			afterRedoVal = undo_redo.current->next->value;
+			redoCurrent(row, col, beforeRedoVal, afterRedoVal, changesData);
+		}
+	}
+
+/*
+	else if (undo_redo.current->generateCells == 1 ) {
+		printf("in redo - generatecells =1\n");
+		if (undoBit == 1) {
 			col = undo_redo.current->col;
 			row = undo_redo.current->row;
 			beforeRedoVal = undo_redo.current->oldValue;
 			afterRedoVal = undo_redo.current->value;
 			redoCurrent(row, col, beforeRedoVal, afterRedoVal);
-			printf("current.next.generateCel= %d\n", undo_redo.current->generateCells);
+		}
+		do {
+			col = undo_redo.current->next->col;
+			row = undo_redo.current->next->row;
+			beforeRedoVal = undo_redo.current->next->oldValue;
+			afterRedoVal = undo_redo.current->next->value;
+			redoCurrent(row, col, beforeRedoVal, afterRedoVal);
 		} while (undo_redo.current->generateCells == 1 && undo_redo.current->next != NULL);
 	}
+	*/
+
 	/*while ((undo_redo.current->generateCells == 1 && (undo_redo.current->next == NULL && undoBit == 1)) || (undo_redo.current->generateCells == 1 && undo_redo.current->next != NULL)) {
 		col = undo_redo.current->col;
 		row = undo_redo.current->row;
@@ -587,19 +659,13 @@ void redo() {
 		redoCurrent(row, col, beforeRedoVal, afterRedoVal);
 	}
 	*/
-	else if (undo_redo.current->next == NULL && undoBit == 1) {
-		col = undo_redo.current->col;
-		row = undo_redo.current->row;
-		beforeRedoVal = undo_redo.current->oldValue;
-		afterRedoVal = undo_redo.current->value;
-		redoCurrent(row, col, beforeRedoVal, afterRedoVal);
-	}
+	
 	else if (undo_redo.current->next->autoCells == 0) {
 		col = undo_redo.current->next->col;
 		row = undo_redo.current->next->row;
 		beforeRedoVal = undo_redo.current->next->oldValue;
 		afterRedoVal = undo_redo.current->next->value;
-		redoCurrent(row, col, beforeRedoVal, afterRedoVal);
+		redoCurrent(row, col, beforeRedoVal, afterRedoVal, changesData);
 	}
 	else {
 		if (undoBit == 1 && undo_redo.current->autoCells == 1) {
@@ -607,7 +673,7 @@ void redo() {
 			row = undo_redo.current->row;
 			beforeRedoVal = undo_redo.current->oldValue;
 			afterRedoVal = undo_redo.current->value;
-			redoCurrent(row, col, beforeRedoVal, afterRedoVal);
+			redoCurrent(row, col, beforeRedoVal, afterRedoVal, changesData);
 			undo_redo.current = undo_redo.current->prev;
 			undoBit = 0;
 		}
@@ -616,9 +682,12 @@ void redo() {
 			row = undo_redo.current->next->row;
 			beforeRedoVal = undo_redo.current->next->oldValue;
 			afterRedoVal = undo_redo.current->next->value;
-			redoCurrent(row, col, beforeRedoVal, afterRedoVal);
+			redoCurrent(row, col, beforeRedoVal, afterRedoVal, changesData);
 		}
 	}
+	printSudoku(currentSudoku);
+	PrintAllChangesRedo(changesData);
+	free(changesData);
 }
 
 void exitGame() {
@@ -922,10 +991,9 @@ void clearBoard(Cell** sudoku) {
 /*should check the result!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
 
 void generate(int x, int y) {
-	int i, row, col, val, ret, countNum = 0, iter = 0, j, k = 0, flag = 0;
+	int i, row, col, val, ret, countNum = 0, iter = 0, j, k = 0;
 	int startRow, startCol;
 	int numOfEmptyCells = checkNumOfEmptyCells(currentSudoku);
-	node* temp = undo_redo.current;
 	if (numOfEmptyCells != (N*N)) {
 		printf("Error: board is not empty\n");
 		return;
@@ -958,12 +1026,14 @@ void generate(int x, int y) {
 				while (!(isRowValidGame(currentSudoku, row, col, val) && isColValidGame(currentSudoku, row, col, val) && isBlockValidGame(currentSudoku, startRow, startCol, row, col, val))) {
 					val = rand() % N;
 				}
-				generateGlob = 1;
-				set(currentSudoku, row, col, val, NULL); /* should treat the undo_redo list*/
-				generateGlob = 0;
+				generateGlobal = 1;
+				generateSudokuPrint = 1;
+				set(currentSudoku, row, col, val, NULL); /* to insert the new cell to the sudoku */
+				generateGlobal = 0;
+				generateSudokuPrint = 0;
 			}
 		ret = ILPSolver();
-		if (ret != 1) {
+		if (ret != 1) { /* we didn't get a solution from the gurobi */
 			iter++;
 		}
 		else {
@@ -977,7 +1047,6 @@ void generate(int x, int y) {
 		return;
 	}
 	clearBoard(currentSudoku);
-	deleteListFrom(temp->next);
 	for (k = 0; k < y; k++) {
 		row = rand() % N;
 		col = rand() % N;
@@ -986,27 +1055,15 @@ void generate(int x, int y) {
 			col = rand() % N;
 		}
 		if (currentSudoku[row*N + col]->empty == 0) {
-			flag = 1;
-		}
-		if (flag == 1) {
-			generateGlob = 1;
+			generateSudokuPrint = 1;
 			set(currentSudoku, row, col, solvedSudoku[row*N + col]->value, NULL);
-			generateGlob = 0;
+			generateSudokuPrint = 0;
 			undo_redo.tail->generateCells = 1;
 			/*currentSudoku[row*N + col]->empty = 1;
 			currentSudoku[row*N + col]->value = solvedSudoku[row*N + col]->value;*/
-			flag = 0;
 		}
 	}
 	printSudoku(currentSudoku);
-	
-	undo_redo.current = undo_redo.head;
-	while(undo_redo.current!=NULL) {
-		printf("values: %d\n", undo_redo.current->value);
-		undo_redo.current = undo_redo.current->next;
-	}
-	undo_redo.current = undo_redo.tail;
-	
 	return;
 }
 

@@ -278,7 +278,7 @@ it changes the current pointer to be the prev node.
 ^^if the prev node is NULL (we made undo to the first node) -> undoBit=1.
 it fixes the cells' erroneousNeib lists by using 'erroneousFixDel' and 'erroneousFixAdd' functions.
 */
-void undoCurrent();
+void undoCurrent(int* changeData);
 
 /*
 This function executes the 'undo' command:
@@ -300,7 +300,7 @@ it changes the current pointer to be the next node:
 else if we have a next node -> we change it.
 afterwards we fix the cells' erroneousNeib lists by using 'erroneousFixDel' and 'erroneousFixAdd' functions.
 */
-void redoCurrent(int row, int col, int beforeRedoVal, int afterRedoVal);
+void redoCurrent(int row, int col, int beforeRedoVal, int afterRedoVal, int* changeData);
 
 /*
 ###################not done yet#######################3

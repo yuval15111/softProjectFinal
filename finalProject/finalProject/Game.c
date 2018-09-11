@@ -154,11 +154,11 @@ void printSeparator() {
 void printSudoku(Cell** sudoku) {
 	int i, j, k, s;
 	printSeparator();
-	for (i = 0; i <blockWidth; i++) { /*rows of blocks*/
-		for (j = 0; j < blockHeight; j++) { /*rows in the block*/
-			for (s = 0; s<blockHeight; s++) { /*cols of blocks*/
+	for (i = 0; i <blockWidth; i++) {
+		for (j = 0; j < blockHeight; j++) {
+			for (s = 0; s<blockHeight; s++) {
 				printf("|");
-				for (k = 0; k < blockWidth; k++) { /*cols in the block*/
+				for (k = 0; k < blockWidth; k++) { 
 					printf(" ");
 					if (sudoku[i*blockHeight*N + j * N + s * blockWidth + k]->empty == 0) {
 						printf("   ");
@@ -510,7 +510,7 @@ void undoCurrent(int* changesData) {
 }
 
 void undo() {
-	int numOfNodes = 0, j, k, i;
+	int numOfNodes = 0, j, k, i, check=0;
 	int* changesData = (int*)malloc(sizeof(int)*((4 * N*N) + 4));
 	memset(changesData, -1, (N*N) + 4);
 	node* temp = NULL;
@@ -523,7 +523,11 @@ void undo() {
 	if (undo_redo.current->generateCells == 1) {
 		while (undo_redo.current->generateCells == 1 && undoBit == 0) {
 			undoCurrent(changesData);
+			check++;
+			printf("check first=%d", check);
 		}
+		printf("check=%d\n", check);
+		printf("undobit=%d\n", undoBit);
 	}
 	else if (numOfNodes > 0) {
 		for (i = 0; i < numOfNodes-1; i++) {

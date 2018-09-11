@@ -522,6 +522,10 @@ void undo() {
 		while (undo_redo.current->generateCells == 1 && undoBit == 0) {
 			undoCurrent(changesData);
 		}
+		printSudoku(currentSudoku);
+		printAllChangesUndo(changesData);
+		free(changesData);
+		return;
 	}
 	else if (numOfNodes > 0) {
 		for (i = 0; i < numOfNodes-1; i++) {

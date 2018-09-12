@@ -215,6 +215,7 @@ char* getCommand() {
 				values[0] = '5';
 				flag = 0;
 			}
+			
 		}
 		else printInvalid();
 	}

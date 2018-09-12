@@ -441,7 +441,7 @@ void set(Cell** sudoku, int row, int col, int val, char* oldCommand) {
 	}
 	else {
 		oldVal = sudoku[row*N + col]->value;
-		if (val == 0) { /*we initialize the cell, change it to an empty cell*/
+			if (val == 0) { /*we initialize the cell, change it to an empty cell*/
 			sudoku[row*N + col]->value = 0;
 			sudoku[row*N + col]->empty = 0;
 			if (sudoku[row*N + col]->erroneous == 1) {

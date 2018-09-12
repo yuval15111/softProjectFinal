@@ -488,6 +488,9 @@ void set(Cell** sudoku, int row, int col, int val, char* oldCommand) {
 		if (mode == 1 && checkNumOfEmptyCells(sudoku) == 0) { /*Last cell was filled*/
 			valid = validateForFinishGame(sudoku);
 			if (valid == 1) {
+				if (autoFillBit == 1) {
+					printSudoku(currentSudoku);
+				}
 				printf("Puzzle solved successfully\n");
 				mode = 0;
 				return;
@@ -890,6 +893,7 @@ void solve(char* path) {
 	int value, col, row;
 	Cell** loadBoard;
 	if ((fd = fopen(path, "r")) == NULL) {
+		printf("path=%s", path); /*delete#############################*/
 		printf("Error: File doesn't exsist or cannot be opened\n");
 		return;
 	}

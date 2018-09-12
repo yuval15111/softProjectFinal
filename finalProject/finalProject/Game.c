@@ -764,6 +764,9 @@ void save(Cell** sudoku, char* path) { /*we should check if it is possible to sa
 									   i think its possilbe. If its possible, we need to check after loading the board in solve
 									   and edit if there is and erroneus cells*/
 	int k, j;
+	char* route = (char*)malloc(sizeof(char) * 2048);
+	FILE* fd = NULL;
+	strcpy(route, path);
 	if (mode == 2) {
 		if (isBoardErrorneus(sudoku) == 1) {
 			printf("Error: board contains errorneus values\n");
@@ -777,7 +780,7 @@ void save(Cell** sudoku, char* path) { /*we should check if it is possible to sa
 		}
 		saveGlob = 0;
 	}
-	FILE* fd = fopen(path, "w");
+	fd = fopen(route, "w");
 	if (fd == NULL) {
 		printf("Error: File cannot be created or modified\n");
 	}
@@ -801,6 +804,7 @@ void save(Cell** sudoku, char* path) { /*we should check if it is possible to sa
 			}
 		}
 	}
+	free(route);
 	fclose(fd);
 	printf("Saved to: %s\n", path);
 }
@@ -892,8 +896,10 @@ void solve(char* path) {
 	int i = 0, dot = 0, k = 0, j;
 	int value, col, row;
 	Cell** loadBoard;
-	if ((fd = fopen(path, "r")) == NULL) {
-		printf("path=%s", path); /*delete#############################*/
+	char* route = (char*)malloc(sizeof(char)*2048);
+	strcpy(route, path);
+	fd = fopen(route, "r");
+	if (fd == NULL) {
 		printf("Error: File doesn't exsist or cannot be opened\n");
 		return;
 	}
@@ -939,11 +945,13 @@ void solve(char* path) {
 			dot = 0;
 		}
 	}
+	free(route);
 	mode = 1;
 	initList(&undo_redo);
 	currentSudoku = loadBoard;
 	checkErroneous(currentSudoku);
 	printSudoku(currentSudoku);
+	fclose(fd);
 }
 
 Cell** generateSudokuGame() {
@@ -968,7 +976,8 @@ void edit(char* path) {
 	char number[256] = "\0";
 	int i = 0, dot = 0, k = 0,j, value, col, row;
 	Cell** loadBoard;
-
+	char* route = (char*)malloc(sizeof(char) * 2048);
+	strcpy(route, path);
 	if (*path == '\0') {
 		if (currentSudoku != NULL) { /* free the memory allocations from the prev game*/
 			freeList(undo_redo.head);
@@ -983,7 +992,7 @@ void edit(char* path) {
 		N = blockHeight * blockWidth;
 	}
 	else {
-		if ((fd = fopen(path, "r")) == NULL) {
+		if ((fd = fopen(route, "r")) == NULL) {
 			printf("Error: File cannot be opened\n");
 			return;
 		}
@@ -1030,12 +1039,14 @@ void edit(char* path) {
 			}
 		}
 	}
+	free(route);
 	mode = 2;
 	markError = 1;
 	initList(&undo_redo);
 	currentSudoku = loadBoard;
 	checkErroneous(currentSudoku);
 	printSudoku(currentSudoku);
+	fclose(fd);
 }
 
 void clearBoard(Cell** sudoku) {

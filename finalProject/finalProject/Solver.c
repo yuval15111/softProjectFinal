@@ -3,6 +3,10 @@
 #include<stdbool.h>
 #include "Solver.h"
 
+/*
+This function gets a row and col and adds a new node to a doubly linked list.
+it insert row and col to be the fields values.
+*/
 stackNode* newNode(int row, int col) {
 	stackNode* Node = (stackNode*) malloc(sizeof(stackNode));
 	Node->row = row;
@@ -12,6 +16,12 @@ stackNode* newNode(int row, int col) {
 	return Node;
 }
 
+/*
+This function insert a new node to the begining of a stack.
+it gets the root of the stack, a row, col and value.
+it creates a new node using 'newNode' function,
+it updates the new node's fields and place it as the new root.
+*/
 void push(stackNode** root, int row, int col, int val) {
 	stackNode* Node = newNode(row, col);
 	Node->lastVal = val;
@@ -19,6 +29,12 @@ void push(stackNode** root, int row, int col, int val) {
 	*root = Node;
 }
 
+/*
+This function gets the root of the stuck and checks wether rhe root is NULL.
+@return
+0 -> if the stack is empty (the root is NULL)
+1 -> else
+*/
 int isEmpty(stackNode* root) {
 	if (root == NULL) {
 		return 0;
@@ -26,6 +42,11 @@ int isEmpty(stackNode* root) {
 	else return 1;
 }
 
+/*
+This function gets a pointer to the root of the stack, delete the first node and return it.
+@return
+the root of the stack
+*/
 int* pop(stackNode** root) {
 	stackNode* temp;
 	int* popped = (int*)malloc(sizeof(int) * 3);
@@ -44,6 +65,11 @@ int* pop(stackNode** root) {
 	return popped;
 }
 
+/*
+This function gets the root of the stack and return it's values.
+@return
+an int array of size 3 that includes the row, col and last value of the root.
+*/
 int* peek(stackNode* root) {
 	int* popped = (int*)malloc(sizeof(int) * 3);
 	popped[0] = -1;
@@ -58,6 +84,13 @@ int* peek(stackNode* root) {
 	return popped;
 }
 
+/*
+This function finds the next empty cell in the sudoku.
+it gets a sudoku, row, col and a pointer to int => index.
+it goes over all the cells and checks if the cell is empty and
+if the empty cell it found is after the cell it got in the command line.
+if so- it updates index[0]=row of the empty cell it found, index[1]=column of the empty cell it found.
+*/
 void findNextEmptyCell(Cell** sudoku, int row, int col, int* index) {
 	int i, j;
 	index[0] = -1;
@@ -65,7 +98,7 @@ void findNextEmptyCell(Cell** sudoku, int row, int col, int* index) {
 	for (i=row; i < N; i++) {
 		for (j=0; j < N; j++) {
 			if (sudoku[i*N + j]->empty == 0 && sudoku[i*N + j]->fixed == 0) {
-				if ((i == row && j > col) || (i > row)) {
+				if ((i == row && j > col) || (i > row)) { /*if the cell is after the current one (next empty)*/
 					index[0] = i;
 					index[1] = j;
 					return;
@@ -76,20 +109,29 @@ void findNextEmptyCell(Cell** sudoku, int row, int col, int* index) {
 	return;
 }
 
+/*
+This function finds the next valid value for a cell.
+it gets a sudoku, row, col and current value.
+it goes over all the numbers between curVal+1 and N and checks if the value is valid
+using 'isRowValidGame', 'isColValidGame', 'isBlockValidGame' functions.
+@return
+-1 -> no valid value has been found
+else -> the valid value
+*/
 int findNextVal(Cell** sudoku, int row, int col, int curVal) {
-	int tempVal = (curVal+1);
-	for (tempVal; tempVal <= N; tempVal++) {
+	int tempVal = (curVal+1); /*the next value for the current cell*/
+	for (tempVal; tempVal <= N; tempVal++) {/*checks validation*/
 		if ((isRowValidGame(sudoku, row, col, tempVal)) && (isColValidGame(sudoku, row, col, tempVal)) && (isBlockValidGame(sudoku, row - (row%blockWidth), col - (col%blockHeight),row ,col, tempVal))) {
 			return tempVal;
 		}
 	}
-	return -1;
+	return -1;/*there is no valid next value*/
 }
 
 int exBackTrack(Cell** sudoku) {
 	int solutionCounter = 0, flag = 1, curRow = 0, curCol = 0, nextVal = 0;
-	int index[2] = { -1,-1 }, *poppedMalloc, *popped;
-	int temp[3] = { -1,-1,-1 };
+	int index[2] = {-1, -1}, *poppedMalloc, *popped;
+	int temp[3] = {-1, -1, -1};
 	int check = 0;
 	stackNode* root = NULL;
 	push(&root, -1, -1, -1);
@@ -97,7 +139,7 @@ int exBackTrack(Cell** sudoku) {
 	curCol = index[1];
 	curRow = index[0];
 	while (flag) {
-		if (index[0] == -1) {  
+		if (index[0] == -1) {  /*the is no next empty cell -> we found a solution*/
 			solutionCounter++;
 			poppedMalloc = pop(&root);
 			temp[0] = poppedMalloc[0];
@@ -122,7 +164,6 @@ int exBackTrack(Cell** sudoku) {
 			curCol = popped[1];
 			curRow = popped[0];
 		}
-
 		/* find the next value (value+1) for the curr cell. */
 		nextVal = findNextVal(sudoku, curRow, curCol, sudoku[curRow*N + curCol]->value);
 		if (nextVal == -1) { /*if there is not valid number*/
@@ -143,7 +184,6 @@ int exBackTrack(Cell** sudoku) {
 					flag = 0;
 					break;
 				}
-
 				/* initialize the cell to be 0 */
 				sudoku[popped[0]*N + popped[1]]->value = 0;
 				sudoku[popped[0]*N + popped[1]]->empty = 0;
@@ -154,7 +194,6 @@ int exBackTrack(Cell** sudoku) {
 				free(poppedMalloc);
 				popped = temp;
 			}
-
 			/* we stepBack to the prev cell and we will find for this cell the next valid number (if there is)*/
 			curRow = popped[0];
 			curCol = popped[1];

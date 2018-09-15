@@ -2,8 +2,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "Game.h"
-
-
 #include "gurobi_c.h"
 
 extern Cell** currentSudoku;
@@ -135,11 +133,11 @@ int oneValPerBlockCon(GRBmodel** model, int* index, double* val) {
 	int i, j, e, k, l;
 	int count, flag = 0;
 	for (e = 0; e < N; e++) {
-		for (k = 0; k < blockHeight; k++) {
-			for (l = 0; l < blockWidth; l++) {
+		for (k = 0; k < blockWidth; k++) {
+			for (l = 0; l < blockHeight; l++) {
 				count = 0;
-				for (i = k * blockWidth; i < (k + 1) * blockWidth; i++) {
-					for (j = l * blockHeight; j < (l + 1) * blockHeight; j++) {
+				for (i = k * blockHeight; i < (k + 1) * blockHeight; i++) {
+					for (j = l * blockWidth; j < (l + 1) * blockWidth; j++) {
 						index[count] = i * N * N + j * N + e;
 						val[count] = 1.0;
 						count++;
@@ -237,10 +235,3 @@ int ILPSolver() {
 
 }
 
-
-/*
-int ILPSolver() {
-	
-	return 1;
-}
-*/

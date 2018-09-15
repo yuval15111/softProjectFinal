@@ -5,10 +5,6 @@ This module reads and interprets the user inputs.
 #ifndef PARSER_H_
 #define PARSER_H_
 
-/*
-This function prints an error.
-*/
-void printInvalid();
 
 /**This function gets the command that the user wrote in the command line and interpret
 to one of the possibillities below:

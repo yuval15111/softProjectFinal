@@ -147,6 +147,27 @@ void deleteListFrom(node* nodeToBeDeleted) {
 	}
 }
 
+/*
+This function frees all the memory resources that we used to our sudoku board.
+this function frees every cell in the board and after that frees the matrix sudoku.
+*/
+void freeSudoku(Cell** sudoku) {
+	int i, j;
+	if (sudoku != NULL) {
+		for (i = 0; i < N; i++) {
+			for (j = 0; j < N; j++) {
+				if (sudoku[i*N + j]->fixed == 0) {
+					if (sudoku[i*N + j]->erroneousNeib.head) {
+						freeList(sudoku[i*N + j]->erroneousNeib.head);
+					}
+				}
+				free(sudoku[i*N + j]);
+			}
+		}
+		free(sudoku);
+	}
+}
+
 Cell* createCell(int value) {
 	Cell* cell = (Cell*)malloc(sizeof(Cell));
 	if (cell == NULL) {
@@ -1364,27 +1385,6 @@ void doCommand(char* command) {
 		generate(command[1] - '0', command[2] - '0');
 	}
 	free(command);
-}
-
-/*
-This function frees all the memory resources that we used to our sudoku board.
-this function frees every cell in the board and after that frees the matrix sudoku.
-*/
-void freeSudoku(Cell** sudoku) {
-	int i, j;
-	if (sudoku != NULL) {
-		for (i = 0; i < N; i++) {
-			for (j = 0; j < N; j++) {
-				if (sudoku[i*N + j]->fixed == 0) {
-					if (sudoku[i*N + j]->erroneousNeib.head) {
-						freeList(sudoku[i*N + j]->erroneousNeib.head);
-					}
-				}	
-				free(sudoku[i*N + j]);
-			}
-		}
-		free(sudoku);
-	}
 }
 
 void playGame() {
